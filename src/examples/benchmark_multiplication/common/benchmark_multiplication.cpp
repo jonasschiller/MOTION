@@ -22,7 +22,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "benchmark_multiplications.h"
+#include "benchmark_multiplication.h"
 
 #include "algorithm/algorithm_description.h"
 #include "protocols/share_wrapper.h"
