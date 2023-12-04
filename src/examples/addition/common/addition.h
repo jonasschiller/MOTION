@@ -33,6 +33,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     bool print_output);
 
 std::vector<encrypto::motion::SecureUnsignedInteger> CreateAdditionCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b);
+    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b, encrypto::motion::SecureUnsignedInteger c);
 
 std::vector<std::uint32_t> GetFileInput(const std::string& path);
