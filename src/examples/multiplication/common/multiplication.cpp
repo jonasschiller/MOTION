@@ -77,8 +77,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  encrypto::motion::SecureUnsignedInteger output =
-      CreateInnerProductCircuit(shared_input[0], shared_input[1]);
+ std::vector<encrypto::motion::SecureUnsignedInteger> output =
+      CreateMultiplicationCircuit(shared_input[0], shared_input[1]);
 
   // Constructs an output gate for the output.
   output = output.Out();
@@ -86,9 +86,16 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   party->Run();
 
   // Converts the output to an integer.
-  auto result = output.As<std::uint32_t>();
+  auto result = output.As<std::vector<std::uint32_t>>();
 
-  if (print_output) std::cout << "Result = " << result << std::endl;
+
+  if (print_output) {
+    std::cout << "Result = ";
+    for (const auto& element : result) {
+      std::cout << element << " ";
+    }
+    std::cout << std::endl;
+  }
 
   party->Finish();
 
@@ -99,7 +106,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 /**
  * Constructs the inner product of the two given inputs.
  */
-encrypto::motion::SecureUnsignedInteger CreateInnerProductCircuit(
+encrypto::motion::SecureUnsignedInteger CreateMultiplicationCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
   // Multiplies the values in a and b, that usually has more than one SIMD values, simultaneously.
   encrypto::motion::SecureUnsignedInteger mult = a * b;
@@ -108,10 +115,8 @@ encrypto::motion::SecureUnsignedInteger CreateInnerProductCircuit(
    * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
    * */
   std::vector<encrypto::motion::SecureUnsignedInteger> mult_unsimdified = mult.Unsimdify();
-
-  encrypto::motion::SecureUnsignedInteger result = mult_unsimdified;
   
-  return result;
+  return mult_unsimdified;
 }
 
 /**

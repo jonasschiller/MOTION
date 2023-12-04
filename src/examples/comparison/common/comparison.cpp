@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "addition.h"
+#include "multiplication.h"
 
 #include <fstream>
 #include <span>
@@ -54,20 +54,20 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
    * */
   switch (protocol) {
     case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      for (std::size_t i = 0; i < 3; i++) {
+      for (std::size_t i = 0; i < 2; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(input, i);
       }
       break;
     }
     case encrypto::motion::MpcProtocol::kBooleanGmw: {
-      for (std::size_t i = 0; i < 3; i++) {
+      for (std::size_t i = 0; i < 2; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(
             encrypto::motion::ToInput(input), i);
       }
       break;
     }
     case encrypto::motion::MpcProtocol::kBmr: {
-      for (std::size_t i = 0; i < 3; i++) {
+      for (std::size_t i = 0; i < 2; i++) {
         shared_input[i] =
             party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), i);
       }
@@ -78,7 +78,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   }
 
   encrypto::motion::SecureUnsignedInteger output =
-      CreateAdditionCircuit(shared_input[0], shared_input[1], shared_input[2]);
+      CreateInnerProductCircuit(shared_input[0], shared_input[1]);
 
   // Constructs an output gate for the output.
   output = output.Out();
@@ -97,19 +97,21 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 }
 
 /**
- * Add the vectors from the three parties.
+ * Constructs the inner product of the two given inputs.
  */
-encrypto::motion::SecureUnsignedInteger CreateAdditionCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
-  // Add the three vectors, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger add = a + b + c;
+encrypto::motion::SecureUnsignedInteger CreateInnerProductCircuit(
+    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
+  // Multiplies the values in a and b, that usually has more than one SIMD values, simultaneously.
+  encrypto::motion::SecureUnsignedInteger mult = a * b;
 
   /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
    * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
    * */
-  std::vector<encrypto::motion::SecureUnsignedInteger> add_unsimdified = add.Unsimdify();
+  std::vector<encrypto::motion::SecureUnsignedInteger> mult_unsimdified = mult.Unsimdify();
 
-  return add_unsimdified;
+  encrypto::motion::SecureUnsignedInteger result = mult_unsimdified;
+  
+  return result;
 }
 
 /**
