@@ -1,4 +1,4 @@
-add_executable(multiplication multiplication.cpp common/multiplication.cpp)
+add_executable(multiplication multiplication_main.cpp common/multiplication.cpp)
 
 if (NOT MOTION_BUILD_BOOST_FROM_SOURCES)
     find_package(Boost
