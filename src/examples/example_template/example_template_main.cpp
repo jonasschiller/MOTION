@@ -22,48 +22,53 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+
+//common c++ imports
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <regex>
 
+//includes for the dependencies
 #include <fmt/format.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
+//include from motion core
 #include "base/party.h"
 #include "common/example_template.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
-
+//set namespace for parsing program options
 namespace program_options = boost::program_options;
-
+//declare function header for party arguments
 bool CheckPartyArgumentSyntax(const std::string& party_argument);
-
+//declare function header for parsing party arguments
 std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char* av[]);
-
+//declare function header for creating parties
 encrypto::motion::PartyPointer CreateParty(const program_options::variables_map& user_options);
-
+//main function
 int main(int ac, char* av[]) {
   auto [user_options, help_flag] = ParseProgramOptions(ac, av);
   // if help flag is set - print allowed command line arguments and exit
   if (help_flag) return EXIT_SUCCESS;
-
+  //Create parties based on parameters
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
-
+  //Evaluate the protocol
   EvaluateProtocol(party);
   return EXIT_SUCCESS;
 }
-
+//Party Argument consists of ID, IP address, and port
 const std::regex kPartyArgumentRegex(
     "(\\d+),(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}),(\\d{1,5})");
 
+//check if the party argument is in the correct syntax
 bool CheckPartyArgumentSyntax(const std::string& party_argument) {
   // other party's id, IP address, and port
   return std::regex_match(party_argument, kPartyArgumentRegex);
 }
-
+//split the party argument into id, IP address, and port
 std::tuple<std::size_t, std::string, std::uint16_t> ParsePartyArgument(
     const std::string& party_argument) {
   std::smatch match;
@@ -77,6 +82,7 @@ std::tuple<std::size_t, std::string, std::uint16_t> ParsePartyArgument(
 // <variables map, help flag>
 std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char* av[]) {
   using namespace std::string_view_literals;
+  //Allows use of a configuration file
   constexpr std::string_view kConfigFileMessage =
       "configuration file, other arguments will overwrite the parameters read from the configuration file"sv;
   bool print, help;
@@ -92,7 +98,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   // clang-format on
 
   program_options::variables_map user_options;
-
+  //uses the boost library to parse the command line arguments
   program_options::store(program_options::parse_command_line(ac, av, description), user_options);
   program_options::notify(user_options);
 
@@ -133,7 +139,8 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
 
   return std::make_pair(user_options, help);
 }
-
+//Create the party by setting parameters and creating the pointer to the party object
+//Sets the logging and communication layer
 encrypto::motion::PartyPointer CreateParty(const program_options::variables_map& user_options) {
   const auto parties_string{user_options["parties"].as<const std::vector<std::string>>()};
   const auto number_of_parties{parties_string.size()};
