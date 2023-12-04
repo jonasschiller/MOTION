@@ -86,7 +86,7 @@ int main(int ac, char* av[]) {
         party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
     accumulated_communication_statistics.Add(communication_statistics);
 
-    std::cout << encrypto::motion::PrintStatistics(fmt::format("Inner Product", protocol_string),
+    std::cout << encrypto::motion::PrintStatistics(fmt::format("Multiplication", protocol_string),
                                                    accumulated_statistics,
                                                    accumulated_communication_statistics);
 
