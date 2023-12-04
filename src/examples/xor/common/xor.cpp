@@ -108,7 +108,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 std::vector<encrypto::motion::SecureUnsignedInteger> CreateXORCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
   // Add the three vectors, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger add = a ^ b ^ c	;
+  encrypto::motion::SecureUnsignedInteger add = a + b + c	;
 
   /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
    * mult_n} with exactly one SIMD value in each. The values can then be operated individually.

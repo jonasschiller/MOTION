@@ -32,7 +32,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     std::span<const std::uint32_t> input_command_line, const std::string& input_file_path,
     bool print_output);
 
-encrypto::motion::SecureUnsignedInteger CreateInnerProductCircuit(
+encrypto::motion::SecureUnsignedInteger CreateXORCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b);
 
 std::vector<std::uint32_t> GetFileInput(const std::string& path);
