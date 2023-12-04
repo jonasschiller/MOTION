@@ -80,21 +80,19 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
  std::vector<encrypto::motion::SecureUnsignedInteger> output =
       CreateMultiplicationCircuit(shared_input[0], shared_input[1]);
 
-  // Constructs an output gate for the output.
-  output = output.Out();
+  // Constructs an output gate for each bin.
+  for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
 
   party->Run();
 
-  // Converts the output to an integer.
-  auto result = output.As<std::vector<std::uint32_t>>();
-
+  // Converts the outputs to integers.
+  std::vector<std::uint32_t> result;
+  for (auto each_output : output) result.push_back(each_output.As<std::uint32_t>());
 
   if (print_output) {
-    std::cout << "Result = ";
-    for (const auto& element : result) {
-      std::cout << element << " ";
+    for (auto each_result: result) {
+      std::cout << each_result << std::endl;
     }
-    std::cout << std::endl;
   }
 
   party->Finish();
@@ -106,7 +104,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 /**
  * Constructs the inner product of the two given inputs.
  */
-encrypto::motion::SecureUnsignedInteger CreateMultiplicationCircuit(
+std::vector<encrypto::motion::SecureUnsignedInteger> CreateMultiplicationCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
   // Multiplies the values in a and b, that usually has more than one SIMD values, simultaneously.
   encrypto::motion::SecureUnsignedInteger mult = a * b;

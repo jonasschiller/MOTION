@@ -77,18 +77,23 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  encrypto::motion::SecureUnsignedInteger output =
+  std::vector<encrypto::motion::SecureUnsignedInteger> output =
       CreateAdditionCircuit(shared_input[0], shared_input[1], shared_input[2]);
 
-  // Constructs an output gate for the output.
-  output = output.Out();
+  // Constructs an output gate for each bin.
+  for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
 
   party->Run();
 
-  // Converts the output to an integer.
-  auto result = output.As<std::uint32_t>();
+  // Converts the outputs to integers.
+  std::vector<std::uint32_t> result;
+  for (auto each_output : output) result.push_back(each_output.As<std::uint32_t>());
 
-  if (print_output) std::cout << "Result = " << result << std::endl;
+  if (print_output) {
+    for (auto each_result: result) {
+      std::cout << each_result << std::endl;
+    }
+  }
 
   party->Finish();
 
@@ -99,7 +104,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 /**
  * Add the vectors from the three parties.
  */
-encrypto::motion::SecureUnsignedInteger CreateAdditionCircuit(
+std::vector<encrypto::motion::SecureUnsignedInteger> CreateAdditionCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
   // Add the three vectors, that usually has more than one SIMD values, simultaneously.
   encrypto::motion::SecureUnsignedInteger add = a + b + c;

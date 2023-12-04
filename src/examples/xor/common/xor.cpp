@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "multiplication.h"
+#include "xor.h"
 
 #include <fstream>
 #include <span>
@@ -54,20 +54,20 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
    * */
   switch (protocol) {
     case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      for (std::size_t i = 0; i < 2; i++) {
+      for (std::size_t i = 0; i < 3; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(input, i);
       }
       break;
     }
     case encrypto::motion::MpcProtocol::kBooleanGmw: {
-      for (std::size_t i = 0; i < 2; i++) {
+      for (std::size_t i = 0; i < 3; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(
             encrypto::motion::ToInput(input), i);
       }
       break;
     }
     case encrypto::motion::MpcProtocol::kBmr: {
-      for (std::size_t i = 0; i < 2; i++) {
+      for (std::size_t i = 0; i < 3; i++) {
         shared_input[i] =
             party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), i);
       }
@@ -78,7 +78,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   }
 
   std::vector<encrypto::motion::SecureUnsignedInteger> output =
-      CreateComparisonCircuit(shared_input[0], shared_input[1]);
+      CreateXORCircuit(shared_input[0], shared_input[1], shared_input[2]);
+
   
   // Constructs an output gate for each bin.
   for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
@@ -94,7 +95,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       std::cout << each_result << std::endl;
     }
   }
-  
 
   party->Finish();
 
@@ -103,19 +103,19 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 }
 
 /**
- * Constructs the inner product of the two given inputs.
+ * Add the vectors from the three parties.
  */
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateComparisonCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
-  // Multiplies the values in a and b, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger comp = a > b;
+std::vector<encrypto::motion::SecureUnsignedInteger> CreateXORCircuit(
+    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
+  // Add the three vectors, that usually has more than one SIMD values, simultaneously.
+  encrypto::motion::SecureUnsignedInteger add = a ^ b ^ c	;
 
   /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
    * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
    * */
-  std::vector<encrypto::motion::SecureUnsignedInteger> comp_unsimdified = comp.Unsimdify();
-  
-  return comp_unsimdified;
+  std::vector<encrypto::motion::SecureUnsignedInteger> add_unsimdified = add.Unsimdify();
+
+  return add_unsimdified;
 }
 
 /**
