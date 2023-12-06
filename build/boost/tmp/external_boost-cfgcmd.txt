@@ -1,0 +1,1 @@
+cmd='./bootstrap.sh;--with-libraries=context,fiber,log,filesystem,system,thread,program_options,json;--prefix=<INSTALL_DIR>'
