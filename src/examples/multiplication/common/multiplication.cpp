@@ -36,7 +36,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
     std::span<const std::uint32_t> input_command_line, const std::string& input_file_path,
     bool print_output) {
-  std::array<encrypto::motion::SecureUnsignedInteger, 2> shared_input;
+  std::array<encrypto::motion::SecureUnsignedInteger, 3> shared_input;
   std::vector<std::uint32_t> input;
 
   // Checks if there is no input from command line.
@@ -54,20 +54,20 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
    * */
   switch (protocol) {
     case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      for (std::size_t i = 0; i < 2; i++) {
+      for (std::size_t i = 0; i < 3; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(input, i);
       }
       break;
     }
     case encrypto::motion::MpcProtocol::kBooleanGmw: {
-      for (std::size_t i = 0; i < 2; i++) {
+      for (std::size_t i = 0; i < 3; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(
             encrypto::motion::ToInput(input), i);
       }
       break;
     }
     case encrypto::motion::MpcProtocol::kBmr: {
-      for (std::size_t i = 0; i < 2; i++) {
+      for (std::size_t i = 0; i < 3; i++) {
         shared_input[i] =
             party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), i);
       }
@@ -78,7 +78,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   }
 
  std::vector<encrypto::motion::SecureUnsignedInteger> output =
-      CreateMultiplicationCircuit(shared_input[0], shared_input[1]);
+      CreateMultiplicationCircuit(shared_input[0], shared_input[1],shared_input[2]);
 
   // Constructs an output gate for each bin.
   for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
@@ -105,9 +105,9 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
  * Constructs the inner product of the two given inputs.
  */
 std::vector<encrypto::motion::SecureUnsignedInteger> CreateMultiplicationCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
+    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b, encrypto::motion::SecureUnsignedInteger c) {
   // Multiplies the values in a and b, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger mult = a * b;
+  encrypto::motion::SecureUnsignedInteger mult = a * b * c;
 
   /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
    * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
