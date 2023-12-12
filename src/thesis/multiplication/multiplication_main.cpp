@@ -135,7 +135,7 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
             ("online-after-setup", program_options::value<bool>()->default_value(true),
              "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
             ("print-output", program_options::bool_switch(&print_output)->default_value(false), "print result")
-            ("input", program_options::value<std::vector<std::uint32_t>>()->multitoken(),
+            ("input", program_options::value<std::vector<std::uint64_t>>()->multitoken(),
              "get party's input from command line, e.g 1 2 3")
             ("input-file", program_options::value<std::string>(),
              "get party's input from file, include path e.g. ../../src/examples/tutorial/innerproduct/data/innerproduct.0.dat");
