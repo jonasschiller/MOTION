@@ -105,7 +105,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 /**
  * Add the vectors from the three parties.
  */
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateXORCircuit(
+std::vector<encrypto::motion::SecureUnsignedInteger> CreateANDCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
   // Add the three vectors, that usually has more than one SIMD values, simultaneously.
   encrypto::motion::SecureUnsignedInteger xor = a& b& c	;

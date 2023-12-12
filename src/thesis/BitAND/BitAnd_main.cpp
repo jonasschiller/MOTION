@@ -61,10 +61,10 @@ int main(int ac, char* av[]) {
         {"BMR", encrypto::motion::MpcProtocol::kBmr},
     };
     bool print_output = flag[1];
-    std::vector<std::uint32_t> input_command_line;
+    std::vector<std::uint64_t> input_command_line;
     std::string input_file_path;
     if (user_options.count("input"))
-      input_command_line = user_options["input"].as<std::vector<std::uint32_t>>();
+      input_command_line = user_options["input"].as<std::vector<std::uint64_t>>();
     else
       input_file_path = user_options["input-file"].as<std::string>();
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;

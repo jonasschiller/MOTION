@@ -35,4 +35,4 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 std::vector<encrypto::motion::SecureUnsignedInteger> CreateMultiplicationCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c);
 
-std::vector<std::uint32_t> GetFileInput(const std::string& path);
+std::vector<std::uint64_t> GetFileInput(const std::string& path);
