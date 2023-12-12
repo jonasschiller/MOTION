@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "xor.h"
+#include "BitAnd.h"
 
 #include <fstream>
 #include <span>
@@ -34,10 +34,10 @@
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
-    std::span<const std::uint32_t> input_command_line, const std::string& input_file_path,
+    std::span<const std::uint64_t> input_command_line, const std::string& input_file_path,
     bool print_output) {
   std::array<encrypto::motion::SecureUnsignedInteger, 2> shared_input;
-  std::vector<std::uint32_t> input;
+  std::vector<std::uint64_t> input;
 
   // Checks if there is no input from command line.
   if (input_command_line.empty()) {
@@ -87,8 +87,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   party->Run();
 
   // Converts the outputs to integers.
-  std::vector<std::uint32_t> result;
-  for (auto each_output : output) result.push_back(each_output.As<std::uint32_t>());
+  std::vector<std::uint64_t> result;
+  for (auto each_output : output) result.push_back(each_output.As<std::uint64_t>());
 
   if (print_output) {
     for (auto each_result: result) {
@@ -108,23 +108,23 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 std::vector<encrypto::motion::SecureUnsignedInteger> CreateXORCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
   // Add the three vectors, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger add = a + b + c	;
+  encrypto::motion::SecureUnsignedInteger xor = a ^ b ^ c	;
 
   /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
    * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
    * */
-  std::vector<encrypto::motion::SecureUnsignedInteger> add_unsimdified = add.Unsimdify();
+  std::vector<encrypto::motion::SecureUnsignedInteger> xor_unsimdified = xor.Unsimdify();
 
-  return add_unsimdified;
+  return xor_unsimdified;
 }
 
 /**
  * Takes input as vector of integers from file in path.
  */
-std::vector<std::uint32_t> GetFileInput(const std::string& path) {
+std::vector<std::uint64_t> GetFileInput(const std::string& path) {
   std::ifstream infile;
-  std::vector<std::uint32_t> input;
-  std::uint32_t n;
+  std::vector<std::uint64_t> input;
+  std::uint64_t n;
 
   infile.open(path);
   if (!infile.is_open()) throw std::runtime_error("Could not open Multiplication file");

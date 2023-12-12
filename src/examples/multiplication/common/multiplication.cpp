@@ -34,7 +34,7 @@
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
-    std::span<const std::uint32_t> input_command_line, const std::string& input_file_path,
+    std::span<const std::uint64_t> input_command_line, const std::string& input_file_path,
     bool print_output) {
   std::array<encrypto::motion::SecureUnsignedInteger, 3> shared_input;
   std::vector<std::uint32_t> input;
@@ -86,8 +86,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   party->Run();
 
   // Converts the outputs to integers.
-  std::vector<std::uint32_t> result;
-  for (auto each_output : output) result.push_back(each_output.As<std::uint32_t>());
+  std::vector<std::uint64_t> result;
+  for (auto each_output : output) result.push_back(each_output.As<std::uint64_t>());
 
   if (print_output) {
     for (auto each_result: result) {
@@ -120,9 +120,9 @@ std::vector<encrypto::motion::SecureUnsignedInteger> CreateMultiplicationCircuit
 /**
  * Takes input as vector of integers from file in path.
  */
-std::vector<std::uint32_t> GetFileInput(const std::string& path) {
+std::vector<std::uint64_t> GetFileInput(const std::string& path) {
   std::ifstream infile;
-  std::vector<std::uint32_t> input;
+  std::vector<std::uint64_t> input;
   std::uint32_t n;
 
   infile.open(path);

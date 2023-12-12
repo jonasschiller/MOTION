@@ -31,7 +31,7 @@
 #include <boost/program_options.hpp>
 
 #include "base/party.h"
-#include "common/xor.h"
+#include "common/BitAnd.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
@@ -170,7 +170,7 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
   if (user_options.count("parties")) {
     const std::vector<std::string> other_parties{
         user_options["parties"].as<std::vector<std::string>>()};
-    if (other_parties.size() != 2)
+    if (other_parties.size() != 3)
       throw std::runtime_error(fmt::format(
           "Incorrect number of parties {} for the chosen input type", other_parties.size()));
     std::string parties("Other parties: ");
