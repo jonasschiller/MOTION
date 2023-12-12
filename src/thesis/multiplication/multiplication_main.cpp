@@ -97,7 +97,7 @@ int main(int ac, char* av[]) {
   return EXIT_SUCCESS;
 }
 
-const std::regex kPartyArgumentRegex("([01]),([^,]+),(\\d{1,5})");
+const std::regex kPartyArgumentRegex("([012]),([^,]+),(\\d{1,5})");
 
 bool CheckPartyArgumentSyntax(const std::string& party_argument) {
   // other party's id, host address, and port
