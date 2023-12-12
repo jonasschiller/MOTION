@@ -170,7 +170,7 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
   if (user_options.count("parties")) {
     const std::vector<std::string> other_parties{
         user_options["parties"].as<std::vector<std::string>>()};
-    if (other_parties.size() != 2)
+    if (other_parties.size() != 3)
       throw std::runtime_error(fmt::format(
           "Incorrect number of parties {} for the chosen input type", other_parties.size()));
     std::string parties("Other parties: ");
