@@ -172,6 +172,7 @@ endif (MOTION_BUILD_BENCHMARKS)
 
 if (MOTION_BUILD_EXE)
     add_subdirectory(src/examples)
+    add_subdirectory(src/thesis)
 endif (MOTION_BUILD_EXE)
 
 if (MOTION_BUILD_DOC)
