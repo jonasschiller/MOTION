@@ -78,7 +78,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   }
 
  std::vector<encrypto::motion::SecureUnsignedInteger> output =
-      CreateDivisonCircuit(shared_input[0], shared_input[1],shared_input[2]);
+      CreateDivisionCircuit(shared_input[0], shared_input[1],shared_input[2]);
 
   // Constructs an output gate for each bin.
   for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
