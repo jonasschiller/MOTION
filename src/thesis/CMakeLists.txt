@@ -1,1 +1,4 @@
 add_subdirectory(multiplication)
+add_subdirectory(comparison)
+add_subdirectory(addition)
+add_subdirectory(division)
