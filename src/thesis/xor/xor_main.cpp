@@ -1,6 +1,8 @@
 // MIT License
 //
-// Copyright (c) 2021 Arianne Roselina Prananto
+// Copyright (c) 2019 Oleksandr Tkachenko
+// Cryptography and Privacy Engineering Group (ENCRYPTO)
+// TU Darmstadt, Germany
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,66 +43,113 @@ namespace program_options = boost::program_options;
 
 bool CheckPartyArgumentSyntax(const std::string& party_argument);
 
-std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions(int ac,
-                                                                                 char* av[]);
+std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char* av[]);
 
 encrypto::motion::PartyPointer CreateParty(const program_options::variables_map& user_options);
 
-int main(int ac, char* av[]) {
-  try {
-    auto [user_options, flag] = ParseProgramOptions(ac, av);
-    // if help flag is set - print allowed command line arguments and exit
-    if (flag[0]) return EXIT_SUCCESS;
+constexpr std::size_t kIllegalProtocol{100}, kIllegalOperationType{100};
 
-    encrypto::motion::MpcProtocol protocol;
-    const std::string protocol_string{user_options["protocol"].as<std::string>()};
-    std::map<std::string, encrypto::motion::MpcProtocol> protocol_conversion{
-        {"ArithmeticGMW", encrypto::motion::MpcProtocol::kArithmeticGmw},
-        {"GMW", encrypto::motion::MpcProtocol::kBooleanGmw},
-        {"BooleanGMW", encrypto::motion::MpcProtocol::kBooleanGmw},
-        {"BMR", encrypto::motion::MpcProtocol::kBmr},
-    };
-    bool print_output = flag[1];
-    std::vector<std::uint64_t> input_command_line;
-    std::string input_file_path;
-    if (user_options.count("input"))
-      input_command_line = user_options["input"].as<std::vector<std::uint64_t>>();
-    else
-      input_file_path = user_options["input-file"].as<std::string>();
+struct Combination {
+  Combination(std::size_t bit_size, encrypto::motion::MpcProtocol protocol,
+              encrypto::motion::PrimitiveOperationType operation_type, std::size_t number_of_simd)
+      : bit_size(bit_size),
+        protocol(protocol),
+        operation_type(operation_type),
+        number_of_simd(number_of_simd) {}
+
+  std::size_t bit_size{0};
+  encrypto::motion::MpcProtocol protocol{kIllegalProtocol};
+  encrypto::motion::PrimitiveOperationType operation_type{kIllegalOperationType};
+  std::size_t number_of_simd{0};
+};
+
+std::vector<Combination> GenerateAllCombinations() {
+  using T = encrypto::motion::PrimitiveOperationType;
+
+  const std::array kArithmeticBitSizes = {32};
+  const std::array kBooleanBitSizes = {1000000};
+  const std::array kNumbersOfSimd = {100000};
+  const std::array kBooleanOperationTypes = {T::kXor};
+  const std::array kArithmeticOperationTypes = {T::kMul};
+
+  std::vector<Combination> combinations;
+
+  for (const auto bit_size : kBooleanBitSizes) {
+    for (const auto number_of_simd : kNumbersOfSimd) {
+      for (const auto operation_type : kBooleanOperationTypes) {
+        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw,
+                                  operation_type, number_of_simd);
+        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, operation_type,
+                                  number_of_simd);
+      }
+
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2Y,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2B,
+                                number_of_simd);
+    }
+  }
+
+  for (const auto bit_size : kArithmeticBitSizes) {
+    for (const auto number_of_simd : kNumbersOfSimd) {
+      for (const auto operation_type : kArithmeticOperationTypes) {
+        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw,
+                                  operation_type, number_of_simd);
+      }
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2A,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2A,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2B,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2Y,
+                                number_of_simd);
+    }
+  }
+  return combinations;
+}
+
+int main(int ac, char* av[]) {
+  auto [user_options, help_flag] = ParseProgramOptions(ac, av);
+  // if help flag is set - print allowed command line arguments and exit
+  if (help_flag) return EXIT_SUCCESS;
+
+  const auto number_of_repititions{user_options["repetitions"].as<std::size_t>()};
+
+  std::vector<Combination> combinations;
+
+  // TODO: add custom combination instead of generating all of them if needed
+
+  combinations = GenerateAllCombinations();
+
+  for (const auto combination : combinations) {
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
-
-    encrypto::motion::PartyPointer party{CreateParty(user_options)};
-    // establish communication channels with other parties
-
-    auto protocol_iterator = protocol_conversion.find(protocol_string);
-    if (protocol_iterator != protocol_conversion.end()) {
-      protocol = protocol_iterator->second;
-      auto statistics =
-          EvaluateProtocol(party, protocol, input_command_line, input_file_path, print_output);
+    for (std::size_t i = 0; i < number_of_repititions; ++i) {
+      encrypto::motion::PartyPointer party{CreateParty(user_options)};
+      // establish communication channels with other parties
+      auto statistics = EvaluateProtocol(party, combination.number_of_simd, combination.bit_size,
+                                         combination.protocol, combination.operation_type);
       accumulated_statistics.Add(statistics);
-    } else {
-      throw std::invalid_argument("Invalid MPC protocol");
+      auto communcation_statistics =
+          party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
+      accumulated_communication_statistics.Add(communcation_statistics);
     }
-    auto communication_statistics =
-        party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
-    accumulated_communication_statistics.Add(communication_statistics);
-
-    std::cout << encrypto::motion::PrintStatistics(fmt::format("Inner Product", protocol_string),
-                                                   accumulated_statistics,
-                                                   accumulated_communication_statistics);
-
-  } catch (std::runtime_error& e) {
-    std::cerr << e.what() << "\n";
-    return EXIT_FAILURE;
+    std::cout << encrypto::motion::PrintStatistics(
+        fmt::format("Protocol {} operation {} bit size {} SIMD {}",
+                    encrypto::motion::to_string(combination.protocol),
+                    encrypto::motion::to_string(combination.operation_type), combination.bit_size,
+                    combination.number_of_simd),
+        accumulated_statistics, accumulated_communication_statistics);
   }
   return EXIT_SUCCESS;
 }
 
-const std::regex kPartyArgumentRegex("([01]),([^,]+),(\\d{1,5})");
+const std::regex kPartyArgumentRegex(
+    "(\\d+),(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}),(\\d{1,5})");
 
 bool CheckPartyArgumentSyntax(const std::string& party_argument) {
-  // other party's id, host address, and port
+  // other party's id, IP address, and port
   return std::regex_match(party_argument, kPartyArgumentRegex);
 }
 
@@ -114,31 +163,23 @@ std::tuple<std::size_t, std::string, std::uint16_t> ParsePartyArgument(
   return {id, host, port};
 }
 
-// <variables map, (help flag, print_output flag)>
-std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions(int ac,
-                                                                                 char* av[]) {
+// <variables map, help flag>
+std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char* av[]) {
   using namespace std::string_view_literals;
   constexpr std::string_view kConfigFileMessage =
       "configuration file, other arguments will overwrite the parameters read from the configuration file"sv;
-  bool print, help, print_output;
-  program_options::options_description description("Allowed options");
+  bool print, help;
+  boost::program_options::options_description description("Allowed options");
   // clang-format off
-    description.add_options()
-            ("help,h", program_options::bool_switch(&help)->default_value(false), "produce help message")
-            ("disable-logging,l", "disable logging to file")
-            ("print-configuration,p", program_options::bool_switch(&print)->default_value(false), "print configuration")
-            ("configuration-file,f", program_options::value<std::string>(), kConfigFileMessage.data())
-            ("my-id", program_options::value<std::size_t>(), "my party id")
-            ("parties", program_options::value<std::vector<std::string>>()->multitoken(),
-             "(other party id, host, port, my role), e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
-            ("protocol", program_options::value<std::string>()->default_value("ArithmeticGMW"), "MPC protocol")
-            ("online-after-setup", program_options::value<bool>()->default_value(true),
-             "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
-            ("print-output", program_options::bool_switch(&print_output)->default_value(false), "print result")
-            ("input", program_options::value<std::vector<std::uint32_t>>()->multitoken(),
-             "get party's input from command line, e.g 1 2 3")
-            ("input-file", program_options::value<std::string>(),
-             "get party's input from file, include path e.g. ../../src/examples/tutorial/innerproduct/data/innerproduct.0.dat");
+  description.add_options()
+      ("help,h", program_options::bool_switch(&help)->default_value(false),"produce help message")
+      ("disable-logging,l","disable logging to file")
+      ("print-configuration,p", program_options::bool_switch(&print)->default_value(false), "print configuration")
+      ("configuration-file,f", program_options::value<std::string>(), kConfigFileMessage.data())
+      ("my-id", program_options::value<std::size_t>(), "my party id")
+      ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
+      ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
+      ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions");
   // clang-format on
 
   program_options::variables_map user_options;
@@ -149,15 +190,14 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
   // argument help or no arguments (at least a configuration file is expected)
   if (help) {
     std::cout << description << "\n";
-    return std::make_pair<program_options::variables_map, std::vector<bool>>(
-        {}, std::vector<bool>{true, print_output});
+    return std::make_pair<program_options::variables_map, bool>({}, true);
   }
 
   // read configuration file
   if (user_options.count("configuration-file")) {
-    std::ifstream user_options_file(user_options["configuration-file"].as<std::string>().c_str());
-    program_options::store(program_options::parse_config_file(user_options_file, description),
-                           user_options);
+    std::ifstream ifs(user_options["configuration-file"].as<std::string>().c_str());
+    program_options::variables_map user_option_config_file;
+    program_options::store(program_options::parse_config_file(ifs, description), user_options);
     program_options::notify(user_options);
   }
 
@@ -170,31 +210,25 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
   if (user_options.count("parties")) {
     const std::vector<std::string> other_parties{
         user_options["parties"].as<std::vector<std::string>>()};
-    if (other_parties.size() != 2)
-      throw std::runtime_error(fmt::format(
-          "Incorrect number of parties {} for the chosen input type", other_parties.size()));
     std::string parties("Other parties: ");
     for (auto& party : other_parties) {
       if (CheckPartyArgumentSyntax(party)) {
         if (print) parties.append(" " + party);
       } else {
-        throw std::runtime_error(
-            fmt::format("Incorrect party argument syntax for party {}", party));
+        throw std::runtime_error("Incorrect party argument syntax " + party);
       }
     }
     if (print) std::cout << parties << std::endl;
   } else
     throw std::runtime_error("Other parties' information is not set but required");
 
-  if (!user_options.count("input") && !user_options.count("input-file"))
-    throw std::runtime_error("Inputs are not set but required");
-  else if (user_options.count("input") && user_options.count("input-file"))
-    throw std::runtime_error("Two types of inputs are set but only required one");
-
   if (print) {
+    std::cout << "Number of SIMD AES evaluations: " << user_options["num-simd"].as<std::size_t>()
+              << std::endl;
+
     std::cout << "MPC Protocol: " << user_options["protocol"].as<std::string>() << std::endl;
   }
-  return std::make_pair(user_options, std::vector<bool>{help, print_output});
+  return std::make_pair(user_options, help);
 }
 
 encrypto::motion::PartyPointer CreateParty(const program_options::variables_map& user_options) {

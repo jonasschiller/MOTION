@@ -1,6 +1,8 @@
 // MIT License
 //
-// Copyright (c) 2021 Arianne Roselina Prananto
+// Copyright (c) 2019 Oleksandr Tkachenko
+// Cryptography and Privacy Engineering Group (ENCRYPTO)
+// TU Darmstadt, Germany
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,54 +24,129 @@
 
 #include "xor.h"
 
-#include <fstream>
-#include <span>
+#include "algorithm/algorithm_description.h"
+#include "base/backend.h"
+#include "base/register.h"
+#include "protocols/arithmetic_gmw/arithmetic_gmw_share.h"
 #include "protocols/arithmetic_gmw/arithmetic_gmw_wire.h"
+#include "protocols/bmr/bmr_share.h"
 #include "protocols/bmr/bmr_wire.h"
+#include "protocols/boolean_gmw/boolean_gmw_share.h"
 #include "protocols/boolean_gmw/boolean_gmw_wire.h"
-#include "secure_type/secure_unsigned_integer.h"
+#include "protocols/share_wrapper.h"
 #include "statistics/analysis.h"
 #include "statistics/run_time_statistics.h"
+#include "utility/block.h"
 #include "utility/config.h"
 
-encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
-    std::span<const std::uint64_t> input_command_line, const std::string& input_file_path,
-    bool print_output) {
-  std::array<encrypto::motion::SecureUnsignedInteger, 2> shared_input;
-  std::vector<std::uint64_t> input;
+template <typename T>
+encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer& party,
+                                                       std::size_t bit_size,
+                                                       std::size_t number_of_simd,std::size_t number_of_wires) {
+  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
+  const std::vector<T> dummy_input(number_of_simd, 0);
 
-  // Checks if there is no input from command line.
-  if (input_command_line.empty()) {
-    // Takes input from file, path is given in input_file_path.
-    input = GetFileInput(input_file_path);
-  } else {
-    for (std::size_t i = 0; i < input_command_line.size(); i++)
-      input.push_back(input_command_line[i]);  // Takes input as vector of integers from terminal.
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  for (auto& w : wires) {
+    w = register_pointer->EmplaceWire<encrypto::motion::proto::arithmetic_gmw::Wire<T>>(
+        dummy_input, *backend);
+    w->SetOnlineFinished();
   }
 
-  /* Assigns input to its party using the given protocol.
-   * The same input will be used as a dummy input for the other party, but only the party with the
-   * same id will really set the input.
-   * */
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
+}
+
+encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer& party,
+                                             std::size_t number_of_wires,
+                                             std::size_t number_of_simd) {
+  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
+  const encrypto::motion::BitVector<> dummy_input(number_of_simd);
+
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  for (auto& w : wires) {
+    auto bmr_wire{
+        register_pointer->EmplaceWire<encrypto::motion::proto::bmr::Wire>(dummy_input, *backend)};
+    w = bmr_wire;
+    bmr_wire->GetMutablePublicKeys() = encrypto::motion::Block128Vector::MakeZero(
+        backend->GetConfiguration()->GetNumOfParties() * number_of_simd);
+    bmr_wire->GetMutableSecretKeys() = encrypto::motion::Block128Vector::MakeZero(number_of_simd);
+    bmr_wire->GetMutablePermutationBits() = encrypto::motion::BitVector<>(number_of_simd);
+    bmr_wire->SetSetupIsReady();
+    bmr_wire->SetOnlineFinished();
+  }
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::bmr::Share>(wires));
+}
+
+encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPointer& party,
+                                                    std::size_t number_of_wires,
+                                                    std::size_t number_of_simd) {
+  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
+  const encrypto::motion::BitVector<> dummy_input(number_of_simd);
+
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  for (auto& w : wires) {
+    w = register_pointer->EmplaceWire<encrypto::motion::proto::boolean_gmw::Wire>(dummy_input,
+                                                                                  *backend);
+    w->SetOnlineFinished();
+  }
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::boolean_gmw::Share>(wires));
+}
+
+encrypto::motion::RunTimeStatistics EvaluateProtocol(
+    encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
+    encrypto::motion::MpcProtocol protocol,
+    encrypto::motion::PrimitiveOperationType operation_type, std::size_t number_of_wires=1000000) {
+  const std::vector<encrypto::motion::BitVector<>> temporary_boolean(
+      bit_size, encrypto::motion::BitVector<>(number_of_simd));
+
+  encrypto::motion::ShareWrapper a, b;
+
   switch (protocol) {
-    case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      for (std::size_t i = 0; i < 3; i++) {
-        shared_input[i] = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(input, i);
-      }
-      break;
-    }
     case encrypto::motion::MpcProtocol::kBooleanGmw: {
-      for (std::size_t i = 0; i < 3; i++) {
-        shared_input[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(
-            encrypto::motion::ToInput(input), i);
-      }
+      a = DummyBooleanGmwShare(party, bit_size, number_of_simd);
+      b = DummyBooleanGmwShare(party, bit_size, number_of_simd);
       break;
     }
     case encrypto::motion::MpcProtocol::kBmr: {
-      for (std::size_t i = 0; i < 3; i++) {
-        shared_input[i] =
-            party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), i);
+      a = DummyBmrShare(party, bit_size, number_of_simd);
+      b = DummyBmrShare(party, bit_size, number_of_simd);
+      break;
+    }
+    case encrypto::motion::MpcProtocol::kArithmeticGmw: {
+      switch (bit_size) {
+        case 8u: {
+          a = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd,number_of_wires);
+          b = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd,number_of_wires);
+          break;
+        }
+        case 16u: {
+          a = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd, number_of_wires);
+          b = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd, number_of_wires);
+          break;
+        }
+        case 32u: {
+          a = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd, number_of_wires);
+          b = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd, number_of_wires);
+          break;
+        }
+        case 64u: {
+          a = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd, number_of_wires);
+          b = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd, number_of_wires);
+          break;
+        }
+        default:
+          throw std::invalid_argument("Invalid bit size");
       }
       break;
     }
@@ -77,59 +154,112 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  std::vector<encrypto::motion::SecureUnsignedInteger> output =
-      CreateXORCircuit(shared_input[0], shared_input[1], shared_input[2]);
-
-  
-  // Constructs an output gate for each bin.
-  for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
-
-  party->Run();
-
-  // Converts the outputs to integers.
-  std::vector<std::uint64_t> result;
-  for (auto each_output : output) result.push_back(each_output.As<std::uint64_t>());
-
-  if (print_output) {
-    for (auto each_result: result) {
-      std::cout << each_result << std::endl;
+  switch (operation_type) {
+    case encrypto::motion::PrimitiveOperationType::kXor: {
+      a ^ b;
+      break;
     }
+    case encrypto::motion::PrimitiveOperationType::kAnd: {
+      a& b;
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kMux: {
+      encrypto::motion::ShareWrapper selection{protocol ==
+                                                       encrypto::motion::MpcProtocol::kBooleanGmw
+                                                   ? DummyBooleanGmwShare(party, 1, number_of_simd)
+                                                   : DummyBmrShare(party, 1, number_of_simd)};
+      selection.Mux(a, b);
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kInv: {
+      ~a;
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kOr: {
+      a | b;
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kAdd: {
+      a + b;
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kMul: {
+      a* b;
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kSqr: {
+      a* a;
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kIn: {
+      if (protocol == encrypto::motion::MpcProtocol::kBooleanGmw)
+        a = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_boolean, 0);
+      else if (protocol == encrypto::motion::MpcProtocol::kBmr)
+        a = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_boolean, 0);
+      else if (protocol == encrypto::motion::MpcProtocol::kArithmeticGmw) {
+        switch (bit_size) {
+          case 8: {
+            std::vector<std::uint8_t> temporary_arithmetic(number_of_simd);
+            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
+            break;
+          }
+          case 16: {
+            std::vector<std::uint16_t> temporary_arithmetic(number_of_simd);
+            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
+            break;
+          }
+          case 32: {
+            std::vector<std::uint32_t> temporary_arithmetic(number_of_simd);
+            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
+            break;
+          }
+          case 64: {
+            std::vector<std::uint64_t> temporary_arithmetic(number_of_simd);
+            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
+            break;
+          }
+          default:
+            throw std::invalid_argument("Unknown bit size");
+        }
+      } else
+        throw std::invalid_argument("Unknown protocol");
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kOut: {
+      a.Out();
+      break;
+    }
+    // conversions
+    case encrypto::motion::PrimitiveOperationType::kA2B: {
+      a.Convert<encrypto::motion::MpcProtocol::kBooleanGmw>();
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kA2Y: {
+      a.Convert<encrypto::motion::MpcProtocol::kBmr>();
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kB2A: {
+      a.Convert<encrypto::motion::MpcProtocol::kArithmeticGmw>();
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kB2Y: {
+      a.Convert<encrypto::motion::MpcProtocol::kBmr>();
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kY2A: {
+      a.Convert<encrypto::motion::MpcProtocol::kArithmeticGmw>();
+      break;
+    }
+    case encrypto::motion::PrimitiveOperationType::kY2B: {
+      a.Convert<encrypto::motion::MpcProtocol::kBooleanGmw>();
+      break;
+    }
+    default:
+      throw std::invalid_argument("Unknown operation type");
   }
 
+  party->Run();
   party->Finish();
-
   const auto& statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
-}
-
-/**
- * Add the vectors from the three parties.
- */
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateXORCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b,encrypto::motion::SecureUnsignedInteger c) {
-  // Add the three vectors, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger add = a + b + c	;
-
-  /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
-   * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
-   * */
-  std::vector<encrypto::motion::SecureUnsignedInteger> add_unsimdified = add.Unsimdify();
-
-  return add_unsimdified;
-}
-
-/**
- * Takes input as vector of integers from file in path.
- */
-std::vector<std::uint64_t> GetFileInput(const std::string& path) {
-  std::ifstream infile;
-  std::vector<std::uint64_t> input;
-  std::uint64_t n;
-
-  infile.open(path);
-  if (!infile.is_open()) throw std::runtime_error("Could not open Multiplication file");
-
-  while (infile >> n) input.push_back(n);
-  infile.close();
-  return input;
 }
