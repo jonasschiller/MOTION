@@ -66,10 +66,11 @@ struct Combination {
 std::vector<Combination> GenerateAllCombinations() {
   using T = encrypto::motion::PrimitiveOperationType;
 
-  const std::array kArithmeticBitSizes = {32};
-  const std::array kBooleanBitSizes = {1000000};
+  const std::array kArithmeticBitSizes = {8, 16, 32, 64};
+  const std::array kBooleanBitSizes = {1000};
   const std::array kNumbersOfSimd = {1000};
-  const std::array kBooleanOperationTypes = {T::kXor};
+  const std::array kBooleanOperationTypes = {T::kIn, T::kOut, T::kXor, T::kAnd, T::kMux, T::kInv};
+  const std::array kArithmeticOperationTypes = {T::kIn, T::kOut, T::kAdd, T::kMul};
 
   std::vector<Combination> combinations;
 
@@ -88,8 +89,25 @@ std::vector<Combination> GenerateAllCombinations() {
                                 number_of_simd);
     }
   }
-   return combinations;
- }
+
+  for (const auto bit_size : kArithmeticBitSizes) {
+    for (const auto number_of_simd : kNumbersOfSimd) {
+      for (const auto operation_type : kArithmeticOperationTypes) {
+        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw,
+                                  operation_type, number_of_simd);
+      }
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2A,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2A,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2B,
+                                number_of_simd);
+      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2Y,
+                                number_of_simd);
+    }
+  }
+  return combinations;
+}
 
 int main(int ac, char* av[]) {
   auto [user_options, help_flag] = ParseProgramOptions(ac, av);
@@ -111,7 +129,7 @@ int main(int ac, char* av[]) {
       encrypto::motion::PartyPointer party{CreateParty(user_options)};
       // establish communication channels with other parties
       auto statistics = EvaluateProtocol(party, combination.number_of_simd, combination.bit_size,
-                                         combination.protocol, combination.operation_type,1);
+                                         combination.protocol, combination.operation_type);
       accumulated_statistics.Add(statistics);
       auto communcation_statistics =
           party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();

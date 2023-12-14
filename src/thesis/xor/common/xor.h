@@ -31,4 +31,4 @@
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
     encrypto::motion::MpcProtocol protocol,
-    encrypto::motion::PrimitiveOperationType operation_type, std::size_t number_of_wires=1);
+    encrypto::motion::PrimitiveOperationType operation_type);
