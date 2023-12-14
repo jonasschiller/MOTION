@@ -71,8 +71,16 @@ int main(int ac, char* av[]) {
   encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
   // establish communication channels with other parties
-  auto statistics = EvaluateProtocol(party, 1000, bit_size,
+  auto protocol_iterator = protocol_conversion.find(protocol_string);
+    if (protocol_iterator != protocol_conversion.end()) {
+      protocol = protocol_iterator->second;
+      auto statistics = EvaluateProtocol(party, 1000, bit_size,
                                          protocol);
+      accumulated_statistics.Add(statistics);
+    } else {
+      throw std::invalid_argument("Invalid MPC protocol");
+    }
+  
   accumulated_statistics.Add(statistics);
   auto communcation_statistics =
           party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
