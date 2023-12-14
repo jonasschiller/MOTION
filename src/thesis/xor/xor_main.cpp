@@ -68,7 +68,7 @@ std::vector<Combination> GenerateAllCombinations() {
 
   const std::array kArithmeticBitSizes = {32};
   const std::array kBooleanBitSizes = {1000000};
-  const std::array kNumbersOfSimd = {100000};
+  const std::array kNumbersOfSimd = {1000};
   const std::array kBooleanOperationTypes = {T::kXor};
 
   std::vector<Combination> combinations;
