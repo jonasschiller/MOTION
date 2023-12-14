@@ -70,7 +70,6 @@ std::vector<Combination> GenerateAllCombinations() {
   const std::array kBooleanBitSizes = {1000000};
   const std::array kNumbersOfSimd = {100000};
   const std::array kBooleanOperationTypes = {T::kXor};
-  const std::array kArithmeticOperationTypes = {};
 
   std::vector<Combination> combinations;
 
@@ -90,24 +89,24 @@ std::vector<Combination> GenerateAllCombinations() {
     }
   }
 
-  for (const auto bit_size : kArithmeticBitSizes) {
-    for (const auto number_of_simd : kNumbersOfSimd) {
-      for (const auto operation_type : kArithmeticOperationTypes) {
-        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw,
-                                  operation_type, number_of_simd);
-      }
-      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2A,
-                                number_of_simd);
-      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2A,
-                                number_of_simd);
-      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2B,
-                                number_of_simd);
-      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2Y,
-                                number_of_simd);
-    }
-  }
-  return combinations;
-}
+//   for (const auto bit_size : kArithmeticBitSizes) {
+//     for (const auto number_of_simd : kNumbersOfSimd) {
+//       for (const auto operation_type : kArithmeticOperationTypes) {
+//         combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw,
+//                                   operation_type, number_of_simd);
+//       }
+//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2A,
+//                                 number_of_simd);
+//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2A,
+//                                 number_of_simd);
+//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2B,
+//                                 number_of_simd);
+//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2Y,
+//                                 number_of_simd);
+//     }
+//   }
+   return combinations;
+ }
 
 int main(int ac, char* av[]) {
   auto [user_options, help_flag] = ParseProgramOptions(ac, av);
@@ -129,7 +128,7 @@ int main(int ac, char* av[]) {
       encrypto::motion::PartyPointer party{CreateParty(user_options)};
       // establish communication channels with other parties
       auto statistics = EvaluateProtocol(party, combination.number_of_simd, combination.bit_size,
-                                         combination.protocol, combination.operation_type,1000000);
+                                         combination.protocol, combination.operation_type,1);
       accumulated_statistics.Add(statistics);
       auto communcation_statistics =
           party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
