@@ -49,46 +49,6 @@ encrypto::motion::PartyPointer CreateParty(const program_options::variables_map&
 
 constexpr std::size_t kIllegalProtocol{100}, kIllegalOperationType{100};
 
-struct Combination {
-  Combination(std::size_t bit_size, encrypto::motion::MpcProtocol protocol,
-              encrypto::motion::PrimitiveOperationType operation_type, std::size_t number_of_simd)
-      : bit_size(bit_size),
-        protocol(protocol),
-        operation_type(operation_type),
-        number_of_simd(number_of_simd) {}
-
-  std::size_t bit_size{0};
-  encrypto::motion::MpcProtocol protocol{kIllegalProtocol};
-  encrypto::motion::PrimitiveOperationType operation_type{kIllegalOperationType};
-  std::size_t number_of_simd{0};
-};
-
-std::vector<Combination> GenerateAllCombinations() {
-  using T = encrypto::motion::PrimitiveOperationType;
-
-  const std::array kBooleanBitSizes = {1000};
-  const std::array kNumbersOfSimd = {1000};
-  const std::array kBooleanOperationTypes = {T::kIn, T::kOut, T::kXor, T::kAnd};
-
-  std::vector<Combination> combinations;
-
-  for (const auto bit_size : kBooleanBitSizes) {
-    for (const auto number_of_simd : kNumbersOfSimd) {
-      for (const auto operation_type : kBooleanOperationTypes) {
-        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw,
-                                  operation_type, number_of_simd);
-        combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, operation_type,
-                                  number_of_simd);
-      }
-
-      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2Y,
-                                number_of_simd);
-      combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2B,
-                                number_of_simd);
-    }
-  }
-  return combinations;
-}
 
 int main(int ac, char* av[]) {
   auto [user_options, help_flag] = ParseProgramOptions(ac, av);
@@ -97,32 +57,31 @@ int main(int ac, char* av[]) {
 
   const auto number_of_repititions{user_options["repetitions"].as<std::size_t>()};
 
-  std::vector<Combination> combinations;
-
-  // TODO: add custom combination instead of generating all of them if needed
-
-  combinations = GenerateAllCombinations();
-
-  for (const auto combination : combinations) {
-    encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
-    encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
-    for (std::size_t i = 0; i < number_of_repititions; ++i) {
-      encrypto::motion::PartyPointer party{CreateParty(user_options)};
-      // establish communication channels with other parties
-      auto statistics = EvaluateProtocol(party, combination.number_of_simd, combination.bit_size,
-                                         combination.protocol, combination.operation_type);
-      accumulated_statistics.Add(statistics);
-      auto communcation_statistics =
+  encrypto::motion::MpcProtocol protocol;
+    const std::string protocol_string{user_options["protocol"].as<std::string>()};
+    std::map<std::string, encrypto::motion::MpcProtocol> protocol_conversion{
+        {"ArithmeticGMW", encrypto::motion::MpcProtocol::kArithmeticGmw},
+        {"GMW", encrypto::motion::MpcProtocol::kBooleanGmw},
+        {"BooleanGMW", encrypto::motion::MpcProtocol::kBooleanGmw},
+        {"BMR", encrypto::motion::MpcProtocol::kBmr},
+    };
+  
+  size_t bit_size = user_options["bitsize"].as<std::size_t>();
+  encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
+  encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
+  encrypto::motion::PartyPointer party{CreateParty(user_options)};
+  // establish communication channels with other parties
+  auto statistics = EvaluateProtocol(party, 1000, bit_size,
+                                         protocol);
+  accumulated_statistics.Add(statistics);
+  auto communcation_statistics =
           party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
-      accumulated_communication_statistics.Add(communcation_statistics);
-    }
-    std::cout << encrypto::motion::PrintStatistics(
-        fmt::format("Protocol {} operation {} bit size {} SIMD {}",
-                    encrypto::motion::to_string(combination.protocol),
-                    encrypto::motion::to_string(combination.operation_type), combination.bit_size,
-                    combination.number_of_simd),
+  accumulated_communication_statistics.Add(communcation_statistics);
+  std::cout << encrypto::motion::PrintStatistics(
+      fmt::format("Protocol {} bit size {} SIMD {}",
+                    encrypto::motion::to_string(protocol), bit_size,
+                    1000),
         accumulated_statistics, accumulated_communication_statistics);
-  }
   return EXIT_SUCCESS;
 }
 
@@ -161,6 +120,8 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
       ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
       ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions");
+    	("protocol", program_options::value<std::string>()->default_value("BooleanGmw"), "MPC protocol")
+      ("bitsize", program_options::value<std::size_t>()->default_value(1000000), "bit size")
   // clang-format on
 
   program_options::variables_map user_options;

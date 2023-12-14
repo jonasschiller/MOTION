@@ -27,8 +27,6 @@
 #include "algorithm/algorithm_description.h"
 #include "base/backend.h"
 #include "base/register.h"
-#include "protocols/arithmetic_gmw/arithmetic_gmw_share.h"
-#include "protocols/arithmetic_gmw/arithmetic_gmw_wire.h"
 #include "protocols/bmr/bmr_share.h"
 #include "protocols/bmr/bmr_wire.h"
 #include "protocols/boolean_gmw/boolean_gmw_share.h"
@@ -38,24 +36,6 @@
 #include "statistics/run_time_statistics.h"
 #include "utility/block.h"
 #include "utility/config.h"
-
-template <typename T>
-encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer& party,
-                                                       std::size_t bit_size,
-                                                       std::size_t number_of_simd) {
-  std::vector<encrypto::motion::WirePointer> wires(1);
-  const std::vector<T> dummy_input(number_of_simd, 0);
-
-  encrypto::motion::BackendPointer backend{party->GetBackend()};
-  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
-
-  wires[0] = register_pointer->EmplaceWire<encrypto::motion::proto::arithmetic_gmw::Wire<T>>(
-      dummy_input, *backend);
-  wires[0]->SetOnlineFinished();
-
-  return encrypto::motion::ShareWrapper(
-      std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
-}
 
 encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer& party,
                                              std::size_t number_of_wires,
@@ -103,8 +83,7 @@ encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPoint
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
-    encrypto::motion::MpcProtocol protocol,
-    encrypto::motion::PrimitiveOperationType operation_type) {
+    encrypto::motion::MpcProtocol protocol) {
   const std::vector<encrypto::motion::BitVector<>> temporary_boolean(
       bit_size, encrypto::motion::BitVector<>(number_of_simd));
 
@@ -121,140 +100,11 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       b = DummyBmrShare(party, bit_size, number_of_simd);
       break;
     }
-    case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      switch (bit_size) {
-        case 8u: {
-          a = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd);
-          break;
-        }
-        case 16u: {
-          a = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd);
-          break;
-        }
-        case 32u: {
-          a = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
-          break;
-        }
-        case 64u: {
-          a = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd);
-          break;
-        }
-        default:
-          throw std::invalid_argument("Invalid bit size");
-      }
-      break;
-    }
     default:
       throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  switch (operation_type) {
-    case encrypto::motion::PrimitiveOperationType::kXor: {
-      a ^ b;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kAnd: {
-      a& b;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kMux: {
-      encrypto::motion::ShareWrapper selection{protocol ==
-                                                       encrypto::motion::MpcProtocol::kBooleanGmw
-                                                   ? DummyBooleanGmwShare(party, 1, number_of_simd)
-                                                   : DummyBmrShare(party, 1, number_of_simd)};
-      selection.Mux(a, b);
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kInv: {
-      ~a;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kOr: {
-      a | b;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kAdd: {
-      a + b;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kMul: {
-      a* b;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kSqr: {
-      a* a;
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kIn: {
-      if (protocol == encrypto::motion::MpcProtocol::kBooleanGmw)
-        a = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_boolean, 0);
-      else if (protocol == encrypto::motion::MpcProtocol::kBmr)
-        a = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_boolean, 0);
-      else if (protocol == encrypto::motion::MpcProtocol::kArithmeticGmw) {
-        switch (bit_size) {
-          case 8: {
-            std::vector<std::uint8_t> temporary_arithmetic(number_of_simd);
-            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
-            break;
-          }
-          case 16: {
-            std::vector<std::uint16_t> temporary_arithmetic(number_of_simd);
-            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
-            break;
-          }
-          case 32: {
-            std::vector<std::uint32_t> temporary_arithmetic(number_of_simd);
-            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
-            break;
-          }
-          case 64: {
-            std::vector<std::uint64_t> temporary_arithmetic(number_of_simd);
-            a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
-            break;
-          }
-          default:
-            throw std::invalid_argument("Unknown bit size");
-        }
-      } else
-        throw std::invalid_argument("Unknown protocol");
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kOut: {
-      a.Out();
-      break;
-    }
-    // conversions
-    case encrypto::motion::PrimitiveOperationType::kA2B: {
-      a.Convert<encrypto::motion::MpcProtocol::kBooleanGmw>();
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kA2Y: {
-      a.Convert<encrypto::motion::MpcProtocol::kBmr>();
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kB2A: {
-      a.Convert<encrypto::motion::MpcProtocol::kArithmeticGmw>();
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kB2Y: {
-      a.Convert<encrypto::motion::MpcProtocol::kBmr>();
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kY2A: {
-      a.Convert<encrypto::motion::MpcProtocol::kArithmeticGmw>();
-      break;
-    }
-    case encrypto::motion::PrimitiveOperationType::kY2B: {
-      a.Convert<encrypto::motion::MpcProtocol::kBooleanGmw>();
-      break;
-    }
-    default:
-      throw std::invalid_argument("Unknown operation type");
-  }
+  a ^ b
 
   party->Run();
   party->Finish();
