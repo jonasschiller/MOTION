@@ -88,23 +88,6 @@ std::vector<Combination> GenerateAllCombinations() {
                                 number_of_simd);
     }
   }
-
-//   for (const auto bit_size : kArithmeticBitSizes) {
-//     for (const auto number_of_simd : kNumbersOfSimd) {
-//       for (const auto operation_type : kArithmeticOperationTypes) {
-//         combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw,
-//                                   operation_type, number_of_simd);
-//       }
-//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBooleanGmw, T::kB2A,
-//                                 number_of_simd);
-//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kBmr, T::kY2A,
-//                                 number_of_simd);
-//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2B,
-//                                 number_of_simd);
-//       combinations.emplace_back(bit_size, encrypto::motion::MpcProtocol::kArithmeticGmw, T::kA2Y,
-//                                 number_of_simd);
-//     }
-//   }
    return combinations;
  }
 

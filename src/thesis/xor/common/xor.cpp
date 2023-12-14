@@ -39,25 +39,6 @@
 #include "utility/block.h"
 #include "utility/config.h"
 
-template <typename T>
-encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer& party,
-                                                       std::size_t bit_size,
-                                                       std::size_t number_of_simd,std::size_t number_of_wires) {
-  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
-  const std::vector<T> dummy_input(number_of_simd, 0);
-
-  encrypto::motion::BackendPointer backend{party->GetBackend()};
-  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
-
-  for (auto& w : wires) {
-    w = register_pointer->EmplaceWire<encrypto::motion::proto::arithmetic_gmw::Wire<T>>(
-        dummy_input, *backend);
-    w->SetOnlineFinished();
-  }
-
-  return encrypto::motion::ShareWrapper(
-      std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
-}
 
 encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer& party,
                                              std::size_t number_of_wires,
@@ -121,33 +102,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     case encrypto::motion::MpcProtocol::kBmr: {
       a = DummyBmrShare(party, bit_size, number_of_simd);
       b = DummyBmrShare(party, bit_size, number_of_simd);
-      break;
-    }
-    case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      switch (bit_size) {
-        case 8u: {
-          a = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd,number_of_wires);
-          b = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd,number_of_wires);
-          break;
-        }
-        case 16u: {
-          a = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd, number_of_wires);
-          b = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd, number_of_wires);
-          break;
-        }
-        case 32u: {
-          a = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd, number_of_wires);
-          b = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd, number_of_wires);
-          break;
-        }
-        case 64u: {
-          a = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd, number_of_wires);
-          b = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd, number_of_wires);
-          break;
-        }
-        default:
-          throw std::invalid_argument("Invalid bit size");
-      }
       break;
     }
     default:
