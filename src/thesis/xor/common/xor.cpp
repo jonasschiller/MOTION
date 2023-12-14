@@ -104,7 +104,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  a ^ b
+  a ^ b;
 
   party->Run();
   party->Finish();
