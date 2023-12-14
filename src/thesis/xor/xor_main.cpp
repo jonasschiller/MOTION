@@ -119,9 +119,9 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("my-id", program_options::value<std::size_t>(), "my party id")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
       ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
-      ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions");
+      ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions")
     	("protocol", program_options::value<std::string>()->default_value("BooleanGmw"), "MPC protocol")
-      ("bitsize", program_options::value<std::size_t>()->default_value(1000000), "bit size")
+      ("bitsize", program_options::value<std::size_t>()->default_value(1000000), "bit size");
   // clang-format on
 
   program_options::variables_map user_options;
