@@ -22,7 +22,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "xor.h"
+#include "BitAnd.h"
 
 #include "algorithm/algorithm_description.h"
 #include "base/backend.h"
@@ -104,7 +104,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
       throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  a ^ b;
+  a& b;
 
   party->Run();
   party->Finish();

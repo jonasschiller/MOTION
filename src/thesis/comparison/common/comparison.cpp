@@ -107,7 +107,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
  */
 std::vector<encrypto::motion::SecureUnsignedInteger> CreateComparisonCircuit(
     encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
-  // Multiplies the values in a and b, that usually has more than one SIMD values, simultaneously.
+  // Compares the values in a and b, that usually has more than one SIMD values, simultaneously.
   encrypto::motion::SecureUnsignedInteger comp = a > b;
 
   /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,

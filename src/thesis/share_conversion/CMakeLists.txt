@@ -1,4 +1,4 @@
-add_executable(addition addition_main.cpp common/addition.cpp)
+add_executable(share_conversion share_conversion_main.cpp common/share_conversion.cpp)
 
 if (NOT MOTION_BUILD_BOOST_FROM_SOURCES)
     find_package(Boost
@@ -7,7 +7,7 @@ if (NOT MOTION_BUILD_BOOST_FROM_SOURCES)
             REQUIRED)
 endif ()
 
-target_link_libraries(addition
+target_link_libraries(share_conversion
         MOTION::motion
         Boost::program_options
         )

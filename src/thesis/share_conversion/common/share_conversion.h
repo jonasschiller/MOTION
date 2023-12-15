@@ -1,6 +1,8 @@
 // MIT License
 //
-// Copyright (c) 2021 Arianne Roselina Prananto
+// Copyright (c) 2019 Oleksandr Tkachenko
+// Cryptography and Privacy Engineering Group (ENCRYPTO)
+// TU Darmstadt, Germany
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +24,10 @@
 
 #pragma once
 
-#include <span>
 #include "base/party.h"
-#include "secure_type/secure_unsigned_integer.h"
 #include "statistics/run_time_statistics.h"
+#include "utility/typedefs.h"
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
-    std::span<const std::uint64_t> input_command_line, const std::string& input_file_path,
-    bool print_output);
-
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateAdditionCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b, encrypto::motion::SecureUnsignedInteger c);
-
-std::vector<std::uint64_t> GetFileInput(const std::string& path);
+    encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
+    encrypto::motion::MpcProtocol protocol);

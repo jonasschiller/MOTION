@@ -1,5 +1,5 @@
 add_subdirectory(multiplication)
 add_subdirectory(comparison)
-add_subdirectory(addition)
 add_subdirectory(division)
-add_subdirectory(xor)
+add_subdirectory(BitAnd)
+add_subdirectory(share_conversion)
