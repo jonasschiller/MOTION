@@ -60,7 +60,7 @@ int main(int ac, char* av[]) {
 
    encrypto::motion::PrimitiveOperationType conversion;
     const std::string conversion_string{user_options["conversion"].as<std::string>()};
-    std::map<std::string, encrypto::motion::MpcProtocol> protocol_conversion{
+    std::map<std::string, encrypto::motion::PrimitiveOperationType> protocol_conversion{
         {"A2B", encrypto::motion::PrimitiveOperationType::kA2B},
         {"B2A", encrypto::motion::PrimitiveOperationType::kB2A},
         {"A2Y", encrypto::motion::PrimitiveOperationType::kA2Y},
@@ -74,7 +74,7 @@ int main(int ac, char* av[]) {
   encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
   // establish communication channels with other parties
-  auto conversion_iterator = protocol_conversion.find(protocol_string);
+  auto conversion_iterator = protocol_conversion.find(conversion_string);
     if (protocol_iterator != protocol_conversion.end()) {
       conversion = conversion_iterator->second;
       auto statistics = EvaluateProtocol(party, 1000, size,
