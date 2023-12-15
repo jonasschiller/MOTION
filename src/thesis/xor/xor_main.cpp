@@ -81,7 +81,6 @@ int main(int ac, char* av[]) {
       throw std::invalid_argument("Invalid MPC protocol");
     }
   
-  accumulated_statistics.Add(statistics);
   auto communcation_statistics =
           party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
   accumulated_communication_statistics.Add(communcation_statistics);
