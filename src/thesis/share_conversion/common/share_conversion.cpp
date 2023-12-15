@@ -112,22 +112,18 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     switch (bit_size) {
         case 8u: {
           a = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint8_t>(party, bit_size, number_of_simd);
           break;
         }
         case 16u: {
           a = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint16_t>(party, bit_size, number_of_simd);
           break;
         }
         case 32u: {
           a = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
           break;
         }
         case 64u: {
           a = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd);
-          b = DummyArithmeticGmwShare<std::uint64_t>(party, bit_size, number_of_simd);
           break;
         }
         default:
