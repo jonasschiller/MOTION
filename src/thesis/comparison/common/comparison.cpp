@@ -127,7 +127,7 @@ std::vector<std::uint64_t> GetFileInput(const std::string& path) {
   std::uint32_t n;
 
   infile.open(path);
-  if (!infile.is_open()) throw std::runtime_error("Could not open Multiplication file");
+  if (!infile.is_open()) throw std::runtime_error("Could not open Comparison file");
 
   while (infile >> n) input.push_back(n);
   infile.close();
