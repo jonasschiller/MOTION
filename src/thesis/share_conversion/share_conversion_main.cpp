@@ -75,7 +75,7 @@ int main(int ac, char* av[]) {
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
   // establish communication channels with other parties
   auto conversion_iterator = protocol_conversion.find(conversion_string);
-    if (protocol_iterator != protocol_conversion.end()) {
+    if (conversion_iterator != protocol_conversion.end()) {
       conversion = conversion_iterator->second;
       auto statistics = EvaluateProtocol(party, 1000, size,
                                          conversion);
