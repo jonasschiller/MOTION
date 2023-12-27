@@ -51,14 +51,9 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   /* Assigns input to its party using the given protocol.
    * The same input will be used as a dummy input for the other party, but only the party with the
    * same id will really set the input.
+   * ArithmeticGMW does not Implement Comparison
    * */
   switch (protocol) {
-    case encrypto::motion::MpcProtocol::kArithmeticGmw: {
-      for (std::size_t i = 0; i < 2; i++) {
-        shared_input[i] = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(input, i);
-      }
-      break;
-    }
     case encrypto::motion::MpcProtocol::kBooleanGmw: {
       for (std::size_t i = 0; i < 2; i++) {
         shared_input[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(
@@ -127,7 +122,7 @@ std::vector<std::uint64_t> GetFileInput(const std::string& path) {
   std::uint32_t n;
 
   infile.open(path);
-  if (!infile.is_open()) throw std::runtime_error("Could not open Comparison file");
+  if (!infile.is_open()) throw std::runtime_error("Could not open Multiplication file");
 
   while (infile >> n) input.push_back(n);
   infile.close();

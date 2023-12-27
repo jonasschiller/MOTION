@@ -131,7 +131,7 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
             ("my-id", program_options::value<std::size_t>(), "my party id")
             ("parties", program_options::value<std::vector<std::string>>()->multitoken(),
              "(other party id, host, port, my role), e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
-            ("protocol", program_options::value<std::string>()->default_value("ArithmeticGMW"), "MPC protocol")
+            ("protocol", program_options::value<std::string>()->default_value("BooleanGMW"), "MPC protocol")
             ("online-after-setup", program_options::value<bool>()->default_value(true),
              "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
             ("print-output", program_options::bool_switch(&print_output)->default_value(false), "print result")
