@@ -138,7 +138,9 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
             ("input", program_options::value<std::vector<std::uint64_t>>()->multitoken(),
              "get party's input from command line, e.g 1 2 3")
             ("input-file", program_options::value<std::string>(),
-             "get party's input from file, include path e.g. ../../src/examples/tutorial/innerproduct/data/innerproduct.0.dat");
+             "get party's input from file, include path e.g. ../../src/examples/tutorial/innerproduct/data/innerproduct.0.dat")
+            ("bitsize", program_options::value<std::size_t>(),
+             "get the desired bitsize for the division integers");
   // clang-format on
 
   program_options::variables_map user_options;
