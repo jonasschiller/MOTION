@@ -22,7 +22,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "benchmark_integers.h"
+#include "division.h"
 
 #include "algorithm/algorithm_description.h"
 #include "protocols/share_wrapper.h"

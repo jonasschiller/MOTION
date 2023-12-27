@@ -33,7 +33,7 @@
 #include <boost/program_options.hpp>
 
 #include "base/party.h"
-#include "common/benchmark_integers.h"
+#include "common/division.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
