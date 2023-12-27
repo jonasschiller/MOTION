@@ -64,7 +64,7 @@ int main(int ac, char* av[]) {
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
   // establish communication channels with other parties
   auto statistics = EvaluateProtocol(party, 1000, 32,
-                                         encrypto::motion::MpcProtocol::kBooleanGmw);
+                                         encrypto::motion::MpcProtocol::kBmr);
   accumulated_statistics.Add(statistics);
   auto communication_statistics =
           party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
