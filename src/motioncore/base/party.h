@@ -195,7 +195,6 @@ class Party {
       }
     }
   }
-
   template <MpcProtocol P, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
   SharePointer In(const std::vector<T>& input,
                   std::size_t party_id = std::numeric_limits<std::size_t>::max()) {
