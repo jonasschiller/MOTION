@@ -27,6 +27,8 @@
 #include "algorithm/algorithm_description.h"
 #include "base/backend.h"
 #include "base/register.h"
+#include "protocols/arithmetic_gmw/arithmetic_gmw_share.h"
+#include "protocols/arithmetic_gmw/arithmetic_gmw_wire.h"
 #include "protocols/bmr/bmr_share.h"
 #include "protocols/bmr/bmr_wire.h"
 #include "protocols/boolean_gmw/boolean_gmw_share.h"
@@ -36,6 +38,24 @@
 #include "statistics/run_time_statistics.h"
 #include "utility/block.h"
 #include "utility/config.h"
+
+template <typename T>
+encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer& party,
+                                                       std::size_t bit_size,
+                                                       std::size_t number_of_simd) {
+  std::vector<encrypto::motion::WirePointer> wires(1);
+  const std::vector<T> dummy_input(number_of_simd, 0);
+
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  wires[0] = register_pointer->EmplaceWire<encrypto::motion::proto::arithmetic_gmw::Wire<T>>(
+      dummy_input, *backend);
+  wires[0]->SetOnlineFinished();
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
+}
 
 encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer& party,
                                              std::size_t number_of_wires,
@@ -84,28 +104,10 @@ encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPoint
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
     encrypto::motion::MpcProtocol protocol) {
-  const std::vector<encrypto::motion::BitVector<>> temporary_boolean(
-      bit_size, encrypto::motion::BitVector<>(number_of_simd));
-
-  encrypto::motion::ShareWrapper a, b;
-
-  switch (protocol) {
-    case encrypto::motion::MpcProtocol::kBooleanGmw: {
-      a = DummyBooleanGmwShare(party, bit_size, number_of_simd);
-      b = DummyBooleanGmwShare(party, bit_size, number_of_simd);
-      break;
-    }
-    case encrypto::motion::MpcProtocol::kBmr: {
-      a = DummyBmrShare(party, bit_size, number_of_simd);
-      b = DummyBmrShare(party, bit_size, number_of_simd);
-      break;
-    }
-    default:
-      throw std::invalid_argument("Invalid MPC protocol");
-  }
-
-  a& b;
-
+  encrypto::motion::SecureUnsignedInteger a,b;
+  a = DummyBooleanGmwShare(party,1,1000000);
+  b = DummyBooleanGmwShare(party,1,1000000);
+  a=a&b;
   party->Run();
   party->Finish();
   const auto& statistics = party->GetBackend()->GetRunTimeStatistics();
