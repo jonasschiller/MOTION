@@ -104,7 +104,7 @@ encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPoint
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
     encrypto::motion::MpcProtocol protocol) {
-  encrypto::motion::SecureUnsignedInteger a,b;
+  encrypto::motion::ShareWrapper a,b;
   a = DummyBooleanGmwShare(party,32,1000000);
   b = DummyBooleanGmwShare(party,32,1000000);
   a=a/b;
