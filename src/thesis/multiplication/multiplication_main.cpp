@@ -72,7 +72,7 @@ int main(int ac, char* av[]) {
     
   std::cout << encrypto::motion::PrintStatistics(
         fmt::format("Protocol {} operation {} bit size {} SIMD {}",
-                    encrypto::motion::to_string(encrypto::motion::MpcProtocol::kBooleanGmw),
+                    encrypto::motion::to_string(encrypto::motion::MpcProtocol::kArithmeticGmw),
                     encrypto::motion::to_string(encrypto::motion::IntegerOperationType::kMul), 32,
                     1000),
         accumulated_statistics, accumulated_communication_statistics);
