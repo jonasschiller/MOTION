@@ -26,6 +26,7 @@
 
 #include "algorithm/algorithm_description.h"
 #include "base/backend.h"
+#include "secure_type/secure_unsigned_integer.h"
 #include "base/register.h"
 #include "protocols/arithmetic_gmw/arithmetic_gmw_share.h"
 #include "protocols/arithmetic_gmw/arithmetic_gmw_wire.h"
