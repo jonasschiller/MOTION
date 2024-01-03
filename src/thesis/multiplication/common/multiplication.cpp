@@ -37,7 +37,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   const std::vector<encrypto::motion::BitVector<>> temporary_bool(
       bit_size, encrypto::motion::BitVector<>(number_of_simd));
 
-  std::vector<encrypto::motion::SecureUnsignedInteger> a(1000000), b(1000000);
+  std::vector<encrypto::motion::SecureUnsignedInteger> a(1000), b(1000);
 
   switch (protocol) {
     case encrypto::motion::MpcProtocol::kBooleanGmw: {
