@@ -45,17 +45,18 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
         // Assuming you have a constructor that takes an integer as a parameter
         a[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_bool, 1);
         b[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_bool, 1);
-        break;
+        
     }
-      
+      break;
     }
     case encrypto::motion::MpcProtocol::kBmr: {
        for (int i = 0; i < a.size(); ++i) {
         // Assuming you have a constructor that takes an integer as a parameter
         a[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_bool, 1);
         b[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_bool, 1);
-        break;
+        
     }
+    break;
     }
     default:
       throw std::invalid_argument("Invalid MPC protocol");
