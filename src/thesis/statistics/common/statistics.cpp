@@ -86,7 +86,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     party_1.shared_input.push_back(party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_1.cleartext_input[i], 1));
   }
   // Create the context for the circuit
-  encrypto::motion::SecureUnsignedInteger sum = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_1.cleartext_input[i], 1);
+  encrypto::motion::SecureUnsignedInteger sum = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(0, 1);
   StatisticsContext context{party_0, party_1, sum};
   // Create the circuit
 
@@ -183,10 +183,8 @@ encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
   {
 
     Here we need to change the Comparison and replacement function
-    if (party_0_values[i] > max_value)
-    {
-      max_value = party_0_values[i];
-    }
+    max_value = keep_max*max_value + new * party_0_values[i];
+
   }
 
 
