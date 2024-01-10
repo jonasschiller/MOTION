@@ -78,7 +78,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   id = id_temp;
   // insert the Input for party 0 and party 1
   for (std::size_t i = 0; i < party_0.cleartext_input.size(); i++)
-  {cd sta
+  {
         party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_0.cleartext_input[i], 0));
   }
   for (std::size_t i = 0; i < party_1.cleartext_input.size(); i++)
@@ -146,7 +146,7 @@ int CreateMeanCircuit(
 {
   auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
   context.sum = CreateSumCircuit(context);
-  int open_sum = sum.Out().As<std::uint32_t>();
+  int open_sum = context.sum.Out().As<std::uint32_t>();
   int mean = open_sum / (party_0_values.size() + party_1_categories.size());
   return mean;
 }
