@@ -92,12 +92,10 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
         party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(id[i]), 1));
   }
   StatisticContext context{party_0, party_1, results};
-  Results output = CreateStatisticsCircuit(context);
+  results.mean = CreateMeanCircuit(context);
   // Constructs an output gate for each bin.
-  output.mean = output.mean.Out();
-  output.max = output.max.Out();
-  output.min = output.min.Out();
-  output.sum = output.sum.Out();
+  results.mean = results.mean.Out();
+  results.sum = results.sum.Out();
 
   party->Run();
   party->Finish();
@@ -142,41 +140,56 @@ GetFileInput(std::size_t party_id, const std::string &path, std::uint32_t number
 /**
  * Constructs the cross tabs of the given data in CrossTabsContext.
  * */
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateCrossTabsCircuit(
-    CrossTabsContext context)
+SecureUnsignedInteger CreateMeanCircuit(
+    StatisticContext context)
 {
-  auto party_0_id = context.party_0.id, party_0_values = context.party_0.shared_input,
-       party_1_id = context.party_1.id, party_1_categories = context.party_1.shared_input;
-  encrypto::motion::ShareWrapper id_match, bin_match;
-
-  for (std::size_t i = 0; i < party_0_id.size(); i++)
-  {
-    for (std::size_t j = 0; j < party_1_id.size(); j++)
-    {
-      id_match = (party_0_id[i] == party_1_id[j]); // Checks if the indices are the same.
-      for (std::size_t k = 0; k < context.number_of_bins; k++)
-      {
-        // Checks if the bins numbers are the same.
-        bin_match = (context.categories[k] == party_1_categories[j]);
-
-        // Checks if both binmatch and idmatch are 'true'.
-        encrypto::motion::ShareWrapper keep = bin_match & id_match;
-
-        // Concatenates keep so that it has the same length as party_0_values[i].
-        std::vector<encrypto::motion::ShareWrapper> keep_concat;
-        keep_concat.push_back(keep);
-        for (std::size_t i = 0; i < 31; i++)
-          keep_concat.push_back(context.full_zero);
-        keep = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
-
-        // Assigns party_0_values[i] in keep only if keep is 'true'.
-        keep = keep.Convert<encrypto::motion::MpcProtocol::kArithmeticGmw>();
-        keep = keep * party_0_values[i].Get();
-
-        // Adds keep to the result.
-        context.results[k] = context.results[k] + encrypto::motion::SecureUnsignedInteger(keep);
-      }
-    }
-  }
-  return context.results;
+  auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
+  SecureUnsignedInteger sum = CreateSumCircuit(context);
+  SecureUnsignedInteger mean = sum / (party_0_values.size() + party_1_categories.size());
+  return mean;
 }
+
+SecureUnsignedInteger CreateSumCircuit(
+    StatisticContext context)
+{
+  auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
+  SecureUnsignedInteger sum1 = 0;
+  SecureUnsignedInteger sum2 = 0;
+  for (std::size_t i = 0; i < party_0.size(); i++)
+  {
+    sum1 += party_0_values[i];
+  }
+  for (std::size_t i = 0; i < party_0.size(); i++)
+  {
+    sum2 += party_1_values[i];
+  }
+  return sum1 + sum2;
+}
+
+// SecureUnsignedInteger CreateMaxCircuit(
+//     StatisticContext context)
+// {
+//   ""
+//   "Secure maximum of all given elements in x, similar to Python's built-in max()."
+//   "" auto party_0_values = context.party_0.shared_input,
+//           party_1_values = context.party_1.shared_input;
+//   SecureUnsignedInteger max1 = 0;
+//   SecureUnsignedInteger max2 = 0;
+//   if len (x) == 1:
+//             x = x[0]
+//         if iter(x) is x:
+//             x = list(x)
+//         n = len(x)
+//         if not n:
+//             raise ValueError('max() arg is an empty sequence')
+
+//         if n == 1:
+//             return x[0]
+
+//         if key is None:
+//             key = lambda a: a
+//         max0 = self.max(x[:n//2], key=key)
+//         max1 = self.max(x[n//2:], key=key)
+//         return self.if_else(key(max0) < key(max1), max1, max0)
+//   return sum1 + sum2;
+// }

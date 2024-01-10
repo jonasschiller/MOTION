@@ -32,11 +32,14 @@ struct Attributes;
 struct Results;
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, const std::string& input_file_path,
+    encrypto::motion::PartyPointer &party, const std::string &input_file_path,
     encrypto::motion::MpcProtocol protocol);
 
-    std::vector<encrypto::motion::SecureUnsignedInteger> CreateCrossTabsCircuit(
+std::vector<encrypto::motion::SecureUnsignedInteger> CreateCrossTabsCircuit(
     CrossTabsContext context);
 
 std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>, std::vector<std::uint32_t>>
-GetFileInput(std::size_t party_id, const std::string& path);
+GetFileInput(std::size_t party_id, const std::string &path);
+
+SecureUnsignedInteger CreateMeanCircuit(StatisticContext context);
+SecureUnsignedInteger CreateSumCircuit(StatisticContext context);
