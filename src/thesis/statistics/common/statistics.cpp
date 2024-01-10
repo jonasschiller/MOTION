@@ -152,13 +152,13 @@ encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
     StatisticsContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
-  encrypto::motion::SecureUnsignedInteger sum1 = 0;
-  encrypto::motion::SecureUnsignedInteger sum2 = 0;
-  for (std::size_t i = 0; i < party_0.size(); i++)
+  encrypto::motion::SecureUnsignedInteger sum1;
+  encrypto::motion::SecureUnsignedInteger sum2;
+  for (std::size_t i = 0; i < party_0_values.size(); i++)
   {
     sum1 += party_0_values[i];
   }
-  for (std::size_t i = 0; i < party_0.size(); i++)
+  for (std::size_t i = 0; i < party_1_values.size(); i++)
   {
     sum2 += party_1_values[i];
   }
@@ -172,23 +172,11 @@ encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
 //   "Secure maximum of all given elements in x, similar to Python's built-in max()."
 //   "" auto party_0_values = context.party_0.shared_input,
 //           party_1_values = context.party_1.shared_input;
-//   SecureUnsignedInteger max1 = 0;
-//   SecureUnsignedInteger max2 = 0;
-//   if len (x) == 1:
-//             x = x[0]
-//         if iter(x) is x:
-//             x = list(x)
-//         n = len(x)
-//         if not n:
-//             raise ValueError('max() arg is an empty sequence')
-
-//         if n == 1:
-//             return x[0]
-
-//         if key is None:
-//             key = lambda a: a
-//         max0 = self.max(x[:n//2], key=key)
-//         max1 = self.max(x[n//2:], key=key)
-//         return self.if_else(key(max0) < key(max1), max1, max0)
+//   encrypto::motion::SecureUnsignedInteger max = 0;
+//   party_0_values.insert(party_0_values.end(), party_1_values.begin(), party_1_values.end());
+//   for (std::size_t i = 0; i < party_0_values.size(); i++)
+//   {
+//
+//
 //   return sum1 + sum2;
 // }
