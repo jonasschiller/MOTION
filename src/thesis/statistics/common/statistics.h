@@ -31,13 +31,15 @@
 
 struct Attributes;
 struct Results;
+struct StatisticsContext
 
-encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer &party, const std::string &input_file_path,
-    encrypto::motion::MpcProtocol protocol);
+    encrypto::motion::RunTimeStatistics
+    EvaluateProtocol(
+        encrypto::motion::PartyPointer &party, const std::string &input_file_path,
+        encrypto::motion::MpcProtocol protocol);
 
 std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>, std::vector<std::uint32_t>>
 GetFileInput(std::size_t party_id, const std::string &path);
 
-encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(StatisticContext context);
-encrypto::motion::SecureUnsignedInteger CreateSumCircuit(StatisticContext context);
+encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(StatisticsContext context);
+encrypto::motion::SecureUnsignedInteger CreateSumCircuit(StatisticsContext context);

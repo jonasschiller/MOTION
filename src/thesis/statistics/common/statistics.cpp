@@ -53,7 +53,7 @@ struct Attributes
 /**
  * Stores all the inputs needed for StatisticCircuit().
  */
-struct StatisticContext
+struct StatisticsContext
 {
   Attributes party_0, party_1;
   Results results;
@@ -91,7 +91,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     party_1.id.push_back(
         party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(id[i]), 1));
   }
-  StatisticContext context{party_0, party_1, results};
+  StatisticsContext context{party_0, party_1, results};
   results.mean = CreateMeanCircuit(context);
   // Constructs an output gate for each bin.
   results.mean = results.mean.Out();
@@ -140,7 +140,7 @@ GetFileInput(std::size_t party_id, const std::string &path, std::uint32_t number
  * Calculate the Mean of the values given by the two parties
  * */
 encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(
-    StatisticContext context)
+    StatisticsContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
   encrypto::motion::SecureUnsignedInteger sum = CreateSumCircuit(context);
@@ -149,7 +149,7 @@ encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(
 }
 
 encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
-    StatisticContext context)
+    StatisticsContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
   encrypto::motion::SecureUnsignedInteger sum1 = 0;
@@ -166,7 +166,7 @@ encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
 }
 
 // SecureUnsignedInteger CreateMaxCircuit(
-//     StatisticContext context)
+//     StatisticsContext context)
 // {
 //   ""
 //   "Secure maximum of all given elements in x, similar to Python's built-in max()."
