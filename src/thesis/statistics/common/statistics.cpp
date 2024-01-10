@@ -144,10 +144,13 @@ GetFileInput(std::size_t party_id, const std::string &path)
 int CreateMeanCircuit(
     StatisticsContext context)
 {
-  auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
+
+  std::cout << "Start " << std::endl;
+  auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
   context.sum = CreateSumCircuit(context);
-  int open_sum = context.sum.Out().As<std::uint32_t>();
-  int mean = open_sum / (party_0_values.size() + party_1_categories.size());
+  uint32_t open_sum = 0;
+  uint32_t open_sum = context.sum.Out().As<std::uint32_t>();
+  uint32_t mean = open_sum / (party_0_values.size() + party_1_values.size());
   return mean;
 }
 
