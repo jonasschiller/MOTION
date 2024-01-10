@@ -57,6 +57,7 @@ struct Attributes
 struct StatisticsContext
 {
   Attributes party_0, party_1;
+  encrypto::motion::SecureUnsignedInteger sum;
 };
 
 /*
@@ -77,8 +78,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   id = id_temp;
   // insert the Input for party 0 and party 1
   for (std::size_t i = 0; i < party_0.cleartext_input.size(); i++)
-  {
-    party_0.shared_input.push_back(
+  {cd sta
         party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_0.cleartext_input[i], 0));
   }
   for (std::size_t i = 0; i < party_1.cleartext_input.size(); i++)
@@ -86,14 +86,19 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     party_1.shared_input.push_back(party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_1.cleartext_input[i], 1));
   }
   // Create the context for the circuit
-  StatisticsContext context{party_0, party_1};
+  encrypto::motion::SecureUnsignedInteger sum = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_1.cleartext_input[i], 1);
+  StatisticsContext context{party_0, party_1, sum};
   // Create the circuit
-  encrypto::motion::SecureUnsignedInteger sum = CreateSumCircuit(context);
+
+  sum = CreateSumCircuit(context);
+  int mean = 0;
+  mean = CreateMeanCircuit(context);
   // Create the output gate
   sum = sum.Out();
 
   party->Run();
   std::cout << "Sum " << sum.As<std::uint32_t>() << std::endl;
+  std::cout << "Mean " << mean << std::endl;
   party->Finish();
 
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
@@ -140,7 +145,7 @@ int CreateMeanCircuit(
     StatisticsContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
-  encrypto::motion::SecureUnsignedInteger sum = CreateSumCircuit(context);
+  context.sum = CreateSumCircuit(context);
   int open_sum = sum.Out().As<std::uint32_t>();
   int mean = open_sum / (party_0_values.size() + party_1_categories.size());
   return mean;
@@ -150,16 +155,15 @@ encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
     StatisticsContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
-  encrypto::motion::SecureUnsignedInteger sum;
   for (std::size_t i = 0; i < party_0_values.size(); i++)
   {
-    sum += party_0_values[i].Get();
+    context.sum += party_0_values[i].Get();
   }
   for (std::size_t i = 0; i < party_1_values.size(); i++)
   {
-    sum += party_1_values[i].Get();
+    context.sum += party_1_values[i].Get();
   }
-  return sum;
+  return context.sum;
 }
 
 /*SecureUnsignedInteger CreateMaxCircuit(

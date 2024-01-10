@@ -30,7 +30,6 @@
 #include "utility/typedefs.h"
 
 struct Attributes;
-struct Results;
 struct StatisticsContext;
 
 encrypto::motion::RunTimeStatistics
