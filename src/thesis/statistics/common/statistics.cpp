@@ -24,6 +24,8 @@
 
 #include "statistics.h"
 
+#include <fstream>
+#include <span>
 #include "algorithm/algorithm_description.h"
 #include "base/backend.h"
 #include "base/register.h"
@@ -47,25 +49,22 @@ struct Attributes
 {
   std::vector<std::uint32_t> cleartext_input; // values for party_0 and categories for party_1.
   std::vector<encrypto::motion::SecureUnsignedInteger> shared_input;
-  std::vector<encrypto::motion::SecureUnsignedInteger> id;
 } party_0, party_1;
 
+struct Results
+{
+  int mean;
+  encrypto::motion::SecureUnsignedInteger max;
+  encrypto::motion::SecureUnsignedInteger min;
+  encrypto::motion::SecureUnsignedInteger sum;
+} results;
 /**
  * Stores all the inputs needed for StatisticCircuit().
  */
 struct StatisticsContext
 {
   Attributes party_0, party_1;
-  Results results;
 };
-
-struct Results
-{
-  encrypto::motion::SecureUnsignedInteger mean;
-  encrypto::motion::SecureUnsignedInteger max;
-  encrypto::motion::SecureUnsignedInteger min;
-  encrypto::motion::SecureUnsignedInteger sum;
-} results;
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer &party, const std::string &input_file_path, encrypto::motion::MpcProtocol protocol)
@@ -85,16 +84,12 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   {
     party_0.shared_input.push_back(
         party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_0.cleartext_input[i], 0));
-    party_1.shared_input.push_back(party->In < encrypto::motion::MpcProtocol::kArithemticGmw(party_1.cleartext_input[i], 1));
-    party_0.id.push_back(
-        party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(id[i]), 0));
-    party_1.id.push_back(
-        party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(id[i]), 1));
+    party_1.shared_input.push_back(party->In < encrypto::motion::MpcProtocol::kArithmeticGmw(party_1.cleartext_input[i], 1));
   }
   StatisticsContext context{party_0, party_1, results};
   results.mean = CreateMeanCircuit(context);
+  results.sum = CreateSumCircuit(context);
   // Constructs an output gate for each bin.
-  results.mean = results.mean.Out();
   results.sum = results.sum.Out();
 
   party->Run();
@@ -139,12 +134,13 @@ GetFileInput(std::size_t party_id, const std::string &path, std::uint32_t number
 /**
  * Calculate the Mean of the values given by the two parties
  * */
-encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(
+int CreateMeanCircuit(
     StatisticsContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
   encrypto::motion::SecureUnsignedInteger sum = CreateSumCircuit(context);
-  encrypto::motion::SecureUnsignedInteger mean = sum / (party_0_values.size() + party_1_categories.size());
+  int open_sum = sum.Out().As<std::uint32_t>();
+  int mean = sum / (party_0_values.size() + party_1_categories.size());
   return mean;
 }
 
@@ -165,18 +161,56 @@ encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
   return sum1 + sum2;
 }
 
-// SecureUnsignedInteger CreateMaxCircuit(
-//     StatisticsContext context)
-// {
-//   ""
-//   "Secure maximum of all given elements in x, similar to Python's built-in max()."
-//   "" auto party_0_values = context.party_0.shared_input,
-//           party_1_values = context.party_1.shared_input;
-//   encrypto::motion::SecureUnsignedInteger max = 0;
-//   party_0_values.insert(party_0_values.end(), party_1_values.begin(), party_1_values.end());
-//   for (std::size_t i = 0; i < party_0_values.size(); i++)
-//   {
-//
-//
-//   return sum1 + sum2;
-// }
+/*SecureUnsignedInteger CreateMaxCircuit(
+    StatisticsContext context)
+{
+  ""
+  "Secure maximum of all given elements in x, similar to Python's built-in max()."
+  "" auto party_0_values = context.party_0.shared_input,
+          party_1_values = context.party_1.shared_input;
+  encrypto::motion::SecureUnsignedInteger max = 0;
+  party_0_values.insert(party_0_values.end(), party_1_values.begin(), party_1_values.end());
+  if(party_0_values.empty()) {
+        throw std::invalid_argument("Vector is empty");
+    }
+  encrypto::motion::SecureUnsignedInteger max_value = party_0_values[0];
+  for (std::size_t i = 0; i < party_0_values.size(); i++)
+  {
+
+    Here we need to change the Comparison and replacement function
+    if (party_0_values[i] > max_value)
+    {
+      max_value = party_0_values[i];
+    }
+  }
+
+
+  return max_value;
+}
+
+SecureUnsignedInteger CreateMinCircuit(
+    StatisticsContext context)
+{
+  ""
+  "Secure maximum of all given elements in x, similar to Python's built-in max()."
+  "" auto party_0_values = context.party_0.shared_input,
+          party_1_values = context.party_1.shared_input;
+  party_0_values.insert(party_0_values.end(), party_1_values.begin(), party_1_values.end());
+  if(party_0_values.empty()) {
+        throw std::invalid_argument("Vector is empty");
+    }
+  encrypto::motion::SecureUnsignedInteger max_value = party_0_values[0];
+  for (std::size_t i = 0; i < party_0_values.size(); i++)
+  {
+
+    Here we need to change the Comparison and replacement function
+    if (party_0_values[i] > max_value)
+    {
+      max_value = party_0_values[i];
+    }
+  }
+
+
+  return max_value;
+}
+*/
