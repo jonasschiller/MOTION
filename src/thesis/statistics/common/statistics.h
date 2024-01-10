@@ -26,6 +26,7 @@
 
 #include "base/party.h"
 #include "statistics/run_time_statistics.h"
+#include "secure_type/secure_unsigned_integer.h"
 #include "utility/typedefs.h"
 
 struct Attributes;
@@ -35,11 +36,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer &party, const std::string &input_file_path,
     encrypto::motion::MpcProtocol protocol);
 
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateCrossTabsCircuit(
-    CrossTabsContext context);
-
 std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>, std::vector<std::uint32_t>>
 GetFileInput(std::size_t party_id, const std::string &path);
 
-SecureUnsignedInteger CreateMeanCircuit(StatisticContext context);
-SecureUnsignedInteger CreateSumCircuit(StatisticContext context);
+encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(StatisticContext context);
+encrypto::motion::SecureUnsignedInteger CreateSumCircuit(StatisticContext context);

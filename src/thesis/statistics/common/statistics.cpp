@@ -115,8 +115,7 @@ GetFileInput(std::size_t party_id, const std::string &path, std::uint32_t number
 
   infile.open(path);
   if (!infile.is_open())
-    throw std::runtime_error("Could not open CrossTabs file");
-
+    throw std::runtime_error("Could not open Statistics File");
   std::uint32_t i = 0;
   while (infile >> n)
   {
@@ -138,23 +137,23 @@ GetFileInput(std::size_t party_id, const std::string &path, std::uint32_t number
 }
 
 /**
- * Constructs the cross tabs of the given data in CrossTabsContext.
+ * Calculate the Mean of the values given by the two parties
  * */
-SecureUnsignedInteger CreateMeanCircuit(
+encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(
     StatisticContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
-  SecureUnsignedInteger sum = CreateSumCircuit(context);
-  SecureUnsignedInteger mean = sum / (party_0_values.size() + party_1_categories.size());
+  encrypto::motion::SecureUnsignedInteger sum = CreateSumCircuit(context);
+  encrypto::motion::SecureUnsignedInteger mean = sum / (party_0_values.size() + party_1_categories.size());
   return mean;
 }
 
-SecureUnsignedInteger CreateSumCircuit(
+encrypto::motion::SecureUnsignedInteger CreateSumCircuit(
     StatisticContext context)
 {
   auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
-  SecureUnsignedInteger sum1 = 0;
-  SecureUnsignedInteger sum2 = 0;
+  encrypto::motion::SecureUnsignedInteger sum1 = 0;
+  encrypto::motion::SecureUnsignedInteger sum2 = 0;
   for (std::size_t i = 0; i < party_0.size(); i++)
   {
     sum1 += party_0_values[i];
