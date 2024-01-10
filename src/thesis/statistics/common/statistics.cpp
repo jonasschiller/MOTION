@@ -88,12 +88,13 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     party_1.shared_input.push_back(party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_1.cleartext_input[i], 1));
   }
   StatisticsContext context{party_0, party_1, results};
-  results.mean = CreateMeanCircuit(context);
   results.sum = CreateSumCircuit(context);
   results.sum = results.sum.Out();
 
   party->Run();
+  std::cout << "Sum" << results.sum.As<std::uint32_t>() << std::endl;
   party->Finish();
+
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
