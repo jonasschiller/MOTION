@@ -79,7 +79,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   // insert the Input for party 0 and party 1
   for (std::size_t i = 0; i < party_0.cleartext_input.size(); i++)
   {
-        party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_0.cleartext_input[i], 0));
+    party_0.shared_input.push_back(party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_0.cleartext_input[i], 0));
   }
   for (std::size_t i = 0; i < party_1.cleartext_input.size(); i++)
   {

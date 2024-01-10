@@ -1,4 +1,0 @@
-add_subdirectory(multiplication)
-add_subdirectory(comparison)
-add_subdirectory(division)
-add_subdirectory(BitAnd)
