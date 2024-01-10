@@ -70,6 +70,8 @@ struct StatisticsContext
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer &party, const std::string &input_file_path, encrypto::motion::MpcProtocol protocol)
 {
+
+  std::cout << "Start" << std::endl;
   std::vector<std::uint32_t> id;
   std::uint32_t zero = 0;
 
