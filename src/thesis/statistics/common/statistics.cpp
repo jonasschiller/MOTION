@@ -64,6 +64,7 @@ struct Results
 struct StatisticsContext
 {
   Attributes party_0, party_1;
+  Results results;
 };
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
