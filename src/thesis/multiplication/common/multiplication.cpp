@@ -61,9 +61,12 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
     encrypto::motion::MpcProtocol protocol) {
   encrypto::motion::ShareWrapper a,b;
-  a = DummyArithmeticGmwShare<std::uint32_t>(party,bit_size,1000000);
-  b = DummyArithmeticGmwShare<std::uint32_t>(party,bit_size,1000000);
-  a=a*b;
+  //a = DummyArithmeticGmwShare<std::uint32_t>(party,32,100000);
+  //b = DummyArithmeticGmwShare<std::uint32_t>(party,32,100000);
+  std::vector<std::uint32_t> temporary_arithmetic(100000);
+  a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
+  b = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic,0);
+  a*b;
   party->Run();
   party->Finish();
   const auto& statistics = party->GetBackend()->GetRunTimeStatistics();

@@ -106,7 +106,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
     encrypto::motion::MpcProtocol protocol) {
   encrypto::motion::SecureUnsignedInteger a, b;
-  std::vector temporary(1000000);
+  const std::vector<encrypto::motion::BitVector<>> temporary(32, encrypto::motion::BitVector<>(10000));
   a = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary, 0);
   b = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary, 0);
   a=a/b;
