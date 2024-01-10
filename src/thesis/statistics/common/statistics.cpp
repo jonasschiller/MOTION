@@ -84,7 +84,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   {
     party_0.shared_input.push_back(
         party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_0.cleartext_input[i], 0));
-    party_1.shared_input.push_back(party->In < encrypto::motion::MpcProtocol::kArithmeticGmw(party_1.cleartext_input[i], 1));
+    party_1.shared_input.push_back(party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(party_1.cleartext_input[i], 1));
   }
   StatisticsContext context{party_0, party_1, results};
   results.mean = CreateMeanCircuit(context);
@@ -140,7 +140,7 @@ int CreateMeanCircuit(
   auto party_0_values = context.party_0.shared_input, party_1_categories = context.party_1.shared_input;
   encrypto::motion::SecureUnsignedInteger sum = CreateSumCircuit(context);
   int open_sum = sum.Out().As<std::uint32_t>();
-  int mean = sum / (party_0_values.size() + party_1_categories.size());
+  int mean = open_sum / (party_0_values.size() + party_1_categories.size());
   return mean;
 }
 
