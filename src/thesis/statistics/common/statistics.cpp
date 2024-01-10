@@ -90,7 +90,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   StatisticsContext context{party_0, party_1, results};
   results.mean = CreateMeanCircuit(context);
   results.sum = CreateSumCircuit(context);
-  // Constructs an output gate for each bin.
   results.sum = results.sum.Out();
 
   party->Run();
@@ -103,7 +102,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
  * Takes inputs from file in path.
  */
 std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>, std::vector<std::uint32_t>>
-GetFileInput(std::size_t party_id, const std::string &path, std::uint32_t number_of_bins)
+GetFileInput(std::size_t party_id, const std::string &path)
 {
   std::ifstream infile;
   std::vector<std::uint32_t> party_0, party_1, id;
