@@ -91,7 +91,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   // Create the circuit
 
   sum = CreateSumCircuit(context);
-  int mean = 0;
+  uint32_t mean = 0;
   mean = CreateMeanCircuit(context);
   // Create the output gate
   sum = sum.Out();
@@ -141,13 +141,15 @@ GetFileInput(std::size_t party_id, const std::string &path)
 /**
  * Calculate the Mean of the values given by the two parties
  * */
-int CreateMeanCircuit(
+uint32_t CreateMeanCircuit(
     StatisticsContext context)
 {
 
   std::cout << "Start " << std::endl;
   auto party_0_values = context.party_0.shared_input, party_1_values = context.party_1.shared_input;
   context.sum = CreateSumCircuit(context);
+  std::cout << "Start " << std::endl;
+  // Reveal the sum to calculate the mean since it will be revealed anyway
   uint32_t open_sum = 0;
   uint32_t open_sum = context.sum.Out().As<std::uint32_t>();
   uint32_t mean = open_sum / (party_0_values.size() + party_1_values.size());
