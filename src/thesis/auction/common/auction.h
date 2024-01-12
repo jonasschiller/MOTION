@@ -33,14 +33,12 @@ struct Attributes;
 struct PsiContext;
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer& party,
-                                                     const std::string& input_file_path,
+                                                     const std::string& input_offers_file_path, const std::string& input_bids_file_path,
                                                      encrypto::motion::MpcProtocol protocol);
-
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateCrossTabsCircuit(PsiContext context);
 
 std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>> GetFileInput(
     std::size_t party_id, const std::string& path);
 
-std::vector<encrypto::motion::SecureUnsignedInteger> CreatePsiCircuit(PsiContext context);
+std::vector<encrypto::motion::SecureUnsignedInteger> CreateAuctionCircuit(PsiContext context);
 encrypto::motion::ShareWrapper prepare_keep(encrypto::motion::ShareWrapper keep,
                                             encrypto::motion::ShareWrapper full_zero);
