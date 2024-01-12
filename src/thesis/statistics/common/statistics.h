@@ -25,20 +25,23 @@
 #pragma once
 
 #include "base/party.h"
-#include "statistics/run_time_statistics.h"
 #include "secure_type/secure_unsigned_integer.h"
+#include "statistics/run_time_statistics.h"
 #include "utility/typedefs.h"
 
 struct Attributes;
 struct StatisticsContext;
 
-encrypto::motion::RunTimeStatistics
-EvaluateProtocol(
-    encrypto::motion::PartyPointer &party, const std::string &input_file_path,
-    encrypto::motion::MpcProtocol protocol);
+encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer& party,
+                                                     const std::string& input_file_path,
+                                                     encrypto::motion::MpcProtocol protocol);
 
 std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>, std::vector<std::uint32_t>>
-GetFileInput(std::size_t party_id, const std::string &path);
+GetFileInput(std::size_t party_id, const std::string& path);
 
-uint32_t CreateMeanCircuit(StatisticsContext context);
-encrypto::motion::SecureUnsignedInteger CreateSumCircuit(StatisticsContext context);
+encrypto::motion::SecureUnsignedInteger CreateMeanCircuit(StatisticsContext context);
+encrypto::motion::ShareWrapper CreateSumCircuit(StatisticsContext context);
+encrypto::motion::ShareWrapper CreateMinMaxCircuit(StatisticsContext context, bool min);
+encrypto::motion::ShareWrapper prepare_keep(encrypto::motion::ShareWrapper keep,
+                                            encrypto::motion::ShareWrapper full_zero);
+
