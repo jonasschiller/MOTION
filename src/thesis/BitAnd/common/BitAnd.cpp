@@ -40,9 +40,10 @@
 #include "utility/config.h"
 
 template <typename T>
-encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer& party,
+encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer &party,
                                                        std::size_t bit_size,
-                                                       std::size_t number_of_simd) {
+                                                       std::size_t number_of_simd)
+{
   std::vector<encrypto::motion::WirePointer> wires(1);
   const std::vector<T> dummy_input(number_of_simd, 0);
 
@@ -57,16 +58,18 @@ encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPo
       std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
 }
 
-encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer& party,
+encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer &party,
                                              std::size_t number_of_wires,
-                                             std::size_t number_of_simd) {
+                                             std::size_t number_of_simd)
+{
   std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
   const encrypto::motion::BitVector<> dummy_input(number_of_simd);
 
   encrypto::motion::BackendPointer backend{party->GetBackend()};
   encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
 
-  for (auto& w : wires) {
+  for (auto &w : wires)
+  {
     auto bmr_wire{
         register_pointer->EmplaceWire<encrypto::motion::proto::bmr::Wire>(dummy_input, *backend)};
     w = bmr_wire;
@@ -82,16 +85,18 @@ encrypto::motion::ShareWrapper DummyBmrShare(encrypto::motion::PartyPointer& par
       std::make_shared<encrypto::motion::proto::bmr::Share>(wires));
 }
 
-encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPointer& party,
+encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPointer &party,
                                                     std::size_t number_of_wires,
-                                                    std::size_t number_of_simd) {
+                                                    std::size_t number_of_simd)
+{
   std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
   const encrypto::motion::BitVector<> dummy_input(number_of_simd);
 
   encrypto::motion::BackendPointer backend{party->GetBackend()};
   encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
 
-  for (auto& w : wires) {
+  for (auto &w : wires)
+  {
     w = register_pointer->EmplaceWire<encrypto::motion::proto::boolean_gmw::Wire>(dummy_input,
                                                                                   *backend);
     w->SetOnlineFinished();
@@ -102,14 +107,15 @@ encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPoint
 }
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
-    encrypto::motion::MpcProtocol protocol) {
-  encrypto::motion::ShareWrapper a,b;
-  a = DummyBooleanGmwShare(party,1,1000000);
-  b = DummyBooleanGmwShare(party,1,1000000);
-  a=a&b;
+    encrypto::motion::PartyPointer &party, std::size_t number_of_simd, std::size_t bit_size,
+    encrypto::motion::MpcProtocol protocol)
+{
+  encrypto::motion::ShareWrapper a, b;
+  a = DummyBooleanGmwShare(party, 1, 1000000);
+  b = DummyBooleanGmwShare(party, 1, 1000000);
+  a = a & b;
   party->Run();
   party->Finish();
-  const auto& statistics = party->GetBackend()->GetRunTimeStatistics();
+  const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
