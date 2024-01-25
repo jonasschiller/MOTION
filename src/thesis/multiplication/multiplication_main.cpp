@@ -63,7 +63,7 @@ int main(int ac, char *av[])
   encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
   encrypto::motion::MpcProtocol protocol{kIllegalProtocol};
-  string protocol_string = user_options.at("protocol").as<std::string>();
+  std::string protocol_string = user_options.at("protocol").as<std::string>();
   if (protocol_string == "boolean_gmw")
     protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
   else if (protocol_string == "arithmetic_gmw")
