@@ -40,9 +40,10 @@
 #include "utility/config.h"
 
 template <typename T>
-encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer& party,
+encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer &party,
                                                        std::size_t bit_size,
-                                                       std::size_t number_of_simd) {
+                                                       std::size_t number_of_simd)
+{
   std::vector<encrypto::motion::WirePointer> wires(1);
   const std::vector<T> dummy_input(number_of_simd, 0);
 
@@ -58,17 +59,30 @@ encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPo
 }
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, std::size_t number_of_simd, std::size_t bit_size,
-    encrypto::motion::MpcProtocol protocol) {
-  encrypto::motion::ShareWrapper a,b;
-  //a = DummyArithmeticGmwShare<std::uint32_t>(party,32,100000);
-  //b = DummyArithmeticGmwShare<std::uint32_t>(party,32,100000);
-  std::vector<std::uint32_t> temporary_arithmetic(100000);
-  a = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic, 0);
-  b = party->In<encrypto::motion::MpcProtocol::kArithmeticGmw>(temporary_arithmetic,0);
-  a*b;
+    encrypto::motion::PartyPointer &party, std::size_t number_of_simd, std::size_t bit_size,
+    encrypto::motion::MpcProtocol protocol)
+{
+  encrypto::motion::ShareWrapper a, b;
+  switch (protocol)
+  {
+  case encrypto::motion::MpcProtocol::kBooleanGmw:
+    a = DummyBooleanGmwShare(party, bit_size, number_of_simd);
+    b = DummyBooleanGmwShare(party, bit_size, number_of_simd);
+    break;
+  case encrypto::motion::MpcProtocol::kArithmeticGmw:
+    a = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
+    b = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
+    break;
+  case encrypto::motion::MpcProtocol::kBmr:
+    a = DummyBmrShare(party, bit_size, number_of_simd);
+    b = DummyBmrShare(party, bit_size, number_of_simd);
+    break;
+  default:
+    break;
+  }
+  a *b;
   party->Run();
   party->Finish();
-  const auto& statistics = party->GetBackend()->GetRunTimeStatistics();
+  const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
