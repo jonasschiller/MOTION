@@ -61,21 +61,17 @@ int main(int ac, char *av[])
   encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
   encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
-  encrypto::motion::MpcProtocol protocol{kIllegalProtocol};
-  switch (user_options.at("protocol").as<std::string>())
-  {
-  case "boolean_gmw":
+  encrypto::motion::MpcProtocol protocol = encrypto::motion::MpcProtocol::kIllegalProtocol;
+  String protocol_string = user_options.at("protocol").as<std::string>();
+  if (protocol_string == "boolean_gmw")
     protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
-    break;
-  case "arithmetic_gmw":
+  else if (protocol_string == "arithmetic_gmw")
     protocol = encrypto::motion::MpcProtocol::kArithmeticGmw;
-    break;
-  case "boolean_bmr":
+  else if (protocol_string == "boolean_bmr")
     protocol = encrypto::motion::MpcProtocol::kBmr;
-    break;
-  default:
-    break;
-  }
+  else
+    throw std::runtime_error("Unknown protocol: " + protocol_string);
+
   // establish communication channels with other parties
   auto statistics = EvaluateProtocol(party, 1000000, 32,
                                      protocol);
