@@ -64,7 +64,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  for (std::size_t i = 0; i < number_of_simd, i++)
+  for (std::size_t i = 0; i < number_of_simd; i++)
   {
     output[i] = a[i] > b[i];
   }
