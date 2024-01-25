@@ -64,7 +64,8 @@ int main(int ac, char *av[])
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
   encrypto::motion::MpcProtocol protocol{kIllegalProtocol};
   std::string protocol_string = user_options.at("protocol").as<std::string>();
-  if (protocol_string == "boolean_gmw")
+  std::size_t number_of_simd = user_options.at("simd").as<std::size_t>();  
+if (protocol_string == "boolean_gmw")
     protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
   else if (protocol_string == "arithmetic_gmw")
     protocol = encrypto::motion::MpcProtocol::kArithmeticGmw;
@@ -74,7 +75,7 @@ int main(int ac, char *av[])
     throw std::runtime_error("Unknown protocol: " + protocol_string);
 
   // establish communication channels with other parties
-  auto statistics = EvaluateProtocol(party, 1000000, 32,
+  auto statistics = EvaluateProtocol(party, number_of_simd, 32,
                                      protocol);
   accumulated_statistics.Add(statistics);
   auto communication_statistics =
@@ -128,7 +129,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("protocol", program_options::value<std::string>()->default_value("boolean_gmw"), "MPC protocol (boolean_gmw, arithmetic_gmw, boolean_bmr, arithmetic_bmr)")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
       ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
-      ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions");
+      ("simd", program_options::value<std::size_t>()->default_value(1), "number of simd");
   // clang-format on
 
   program_options::variables_map user_options;
