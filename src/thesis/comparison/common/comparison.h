@@ -28,11 +28,5 @@
 #include "statistics/run_time_statistics.h"
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
-    std::span<const std::uint64_t> input_command_line, const std::string& input_file_path,
-    bool print_output);
-
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateComparisonCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b);
-
-std::vector<std::uint64_t> GetFileInput(const std::string& path);
+    encrypto::motion::PartyPointer &party, encrypto::motion::MpcProtocol protocol,
+    std::size_t number_of_simd, std::size_t bit_size);

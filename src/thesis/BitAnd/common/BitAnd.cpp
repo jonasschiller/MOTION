@@ -110,9 +110,25 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer &party, std::size_t number_of_simd, std::size_t bit_size,
     encrypto::motion::MpcProtocol protocol)
 {
+
   encrypto::motion::ShareWrapper a, b;
-  a = DummyBooleanGmwShare(party, 1, 1000000);
-  b = DummyBooleanGmwShare(party, 1, 1000000);
+  switch (protocol)
+  {
+  case encrypto::motion::MpcProtocol::kBooleanGmw:
+  {
+    a = DummyBooleanGmwShare(party, 1, number_of_simd);
+    b = DummyBooleanGmwShare(party, 1, number_of_simd);
+    break;
+  }
+  case encrypto::motion::MpcProtocol::kBmr:
+  {
+    a = DummyBooleanGmwShare(party, 1, number_of_simd);
+    b = DummyBooleanGmwShare(party, 1, number_of_simd);
+    break;
+  }
+  default:
+    throw std::invalid_argument("Invalid MPC protocol");
+  }
   a = a & b;
   party->Run();
   party->Finish();

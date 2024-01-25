@@ -33,98 +33,49 @@
 #include "utility/config.h"
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
-    encrypto::motion::PartyPointer& party, encrypto::motion::MpcProtocol protocol,
-    std::span<const std::uint64_t> input_command_line, const std::string& input_file_path,
-    bool print_output) {
-  std::array<encrypto::motion::SecureUnsignedInteger, 2> shared_input;
-  std::vector<std::uint64_t> input;
+    encrypto::motion::PartyPointer &party, encrypto::motion::MpcProtocol protocol,
+    std::size_t number_of_simd, sdt::size_t bit_size)
+{
+  std::uint32_t input = 0;
+  std::vector<encrypto::motion::SecureUnsignedInteger> a(number_of_simd), b(number_of_simd);
+  std::vector<encrypto::motion::ShareWrapper> output(number_of_simd);
+  switch (protocol)
+  {
+  case encrypto::motion::MpcProtocol::kBooleanGmw:
+  {
+    for (std::size_t i = 0; i < number_of_simd; i++)
+    {
+      a[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(input), 0);
+      b[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(input), 0);
+    }
+    break;
+  }
+  case encrypto::motion::MpcProtocol::kBmr:
+  {
+    for (std::size_t i = 0; i < number_of_simd, i++)
+    {
+      a[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), 0);
+      b[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), 0);
+    }
 
-  // Checks if there is no input from command line.
-  if (input_command_line.empty()) {
-    // Takes input from file, path is given in input_file_path.
-    input = GetFileInput(input_file_path);
-  } else {
-    for (std::size_t i = 0; i < input_command_line.size(); i++)
-      input.push_back(input_command_line[i]);  // Takes input as vector of integers from terminal.
+    break;
+  }
+  default:
+    throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  /* Assigns input to its party using the given protocol.
-   * The same input will be used as a dummy input for the other party, but only the party with the
-   * same id will really set the input.
-   * ArithmeticGMW does not Implement Comparison
-   * */
-  switch (protocol) {
-    case encrypto::motion::MpcProtocol::kBooleanGmw: {
-      for (std::size_t i = 0; i < 2; i++) {
-        shared_input[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(
-            encrypto::motion::ToInput(input), i);
-      }
-      break;
-    }
-    case encrypto::motion::MpcProtocol::kBmr: {
-      for (std::size_t i = 0; i < 2; i++) {
-        shared_input[i] =
-            party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), i);
-      }
-      break;
-    }
-    default:
-      throw std::invalid_argument("Invalid MPC protocol");
+  for (std::size_t i = 0; i < number_of_simd, i++)
+  {
+    output[i] = a[i] > b[i]
   }
 
-  std::vector<encrypto::motion::SecureUnsignedInteger> output =
-      CreateComparisonCircuit(shared_input[0], shared_input[1]);
-  
-  // Constructs an output gate for each bin.
-  for (std::size_t i = 0; i < output.size(); i++) output[i] = output[i].Out();
+  output[number_of_simd - 1] = output[number_of_simd - 1].Out();
 
   party->Run();
 
-  // Converts the outputs to integers.
-  std::vector<std::uint64_t> result;
-  for (auto each_output : output) result.push_back(each_output.As<std::uint64_t>());
-
-  if (print_output) {
-    for (auto each_result: result) {
-      std::cout << each_result << std::endl;
-    }
-  }
-  
-
   party->Finish();
 
-  const auto& statistics = party->GetBackend()->GetRunTimeStatistics();
+  const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
+
   return statistics.front();
-}
-
-/**
- * Constructs the inner product of the two given inputs.
- */
-std::vector<encrypto::motion::SecureUnsignedInteger> CreateComparisonCircuit(
-    encrypto::motion::SecureUnsignedInteger a, encrypto::motion::SecureUnsignedInteger b) {
-  // Compares the values in a and b, that usually has more than one SIMD values, simultaneously.
-  encrypto::motion::SecureUnsignedInteger comp = a > b;
-
-  /* Divides mult into shares with exactly 1 SIMD value. It will return a vector {mult_0, ...,
-   * mult_n} with exactly one SIMD value in each. The values can then be operated individually.
-   * */
-  std::vector<encrypto::motion::SecureUnsignedInteger> comp_unsimdified = comp.Unsimdify();
-  
-  return comp_unsimdified;
-}
-
-/**
- * Takes input as vector of integers from file in path.
- */
-std::vector<std::uint64_t> GetFileInput(const std::string& path) {
-  std::ifstream infile;
-  std::vector<std::uint64_t> input;
-  std::uint32_t n;
-
-  infile.open(path);
-  if (!infile.is_open()) throw std::runtime_error("Could not open Multiplication file");
-
-  while (infile >> n) input.push_back(n);
-  infile.close();
-  return input;
 }
