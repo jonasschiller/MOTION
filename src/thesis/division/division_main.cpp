@@ -61,7 +61,7 @@ int main(int ac, char *av[])
   encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
   encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
   encrypto::motion::PartyPointer party{CreateParty(user_options)};
-
+  encrypto::motion::MpcProtocol protocol;
   std::string protocol_string = user_options.at("protocol").as<std::string>();
   std::size_t number_of_simd = user_options.at("simd").as<std::size_t>();
   if (protocol_string == "boolean_gmw")

@@ -34,7 +34,7 @@
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer &party, encrypto::motion::MpcProtocol protocol,
-    std::size_t number_of_simd, sdt::size_t bit_size)
+    std::size_t number_of_simd, std::size_t bit_size)
 {
   std::uint32_t input = 0;
   std::vector<encrypto::motion::SecureUnsignedInteger> a(number_of_simd), b(number_of_simd);
@@ -52,7 +52,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   }
   case encrypto::motion::MpcProtocol::kBmr:
   {
-    for (std::size_t i = 0; i < number_of_simd, i++)
+    for (std::size_t i = 0; i < number_of_simd; i++)
     {
       a[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), 0);
       b[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), 0);
@@ -66,7 +66,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 
   for (std::size_t i = 0; i < number_of_simd, i++)
   {
-    output[i] = a[i] > b[i]
+    output[i] = a[i] > b[i];
   }
 
   output[number_of_simd - 1] = output[number_of_simd - 1].Out();
