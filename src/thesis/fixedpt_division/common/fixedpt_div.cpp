@@ -38,9 +38,15 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                      bool check)
 {
   // TODO tests
-  std::vector<encrypto::motion::BitVector<>> tmp(2);
-  tmp[0] = encrypto::motion::BitVector<>(1280, 32);
-  tmp[1] = encrypto::motion::BitVector<>(256, 32);
+  std::uint32_t test1 = 1280;
+  std::uint32_t test2 = 256;
+
+  auto tmp1 = encrypto::motion::ToInput(1280);
+  auto tmp2 = encrypto::motion::ToInput(256);
+  std::vector<encrypto::motion::BitVector<>> tmp;
+  tmp.insert(tmp.end(), tmp1.begin(), tmp1.end());
+  tmp.insert(tmp.end(), tmp2.begin(), tmp2.end());
+
   encrypto::motion::ShareWrapper input{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
