@@ -62,23 +62,21 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
 
   const std::vector<encrypto::motion::BitVector<>> temporary_bool(
       bit_size, encrypto::motion::BitVector<>(number_of_simd));
-
+  encrypto::motion::SecureUnsignedInteger a, b;
+  encrypto::motion::ShareWrapper a_s, b_s;
   switch (protocol)
   {
-  case encrypto::motion::MpcProtocol::kBooleanGmw:
-    encrypto::motion::SecureUnsignedInteger a, b;
+  case encrypto::motion::MpcProtocol::kBooleanGmw:  
     a = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_bool, 0);
     b = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_bool, 0);
-    a = a * b;
+    a * b;
     break;
   case encrypto::motion::MpcProtocol::kArithmeticGmw:
-    encrypto::motion::ShareWrapper a, b;
-    a = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
-    b = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
-    a = a * b;
+    a_s = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
+    b_s = DummyArithmeticGmwShare<std::uint32_t>(party, bit_size, number_of_simd);
+    a_s * b_s;
     break;
   case encrypto::motion::MpcProtocol::kBmr:
-    encrypto::motion::SecureUnsignedInteger a, b;
     a = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_bool, 0);
     b = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_bool, 0);
     a = a * b;
