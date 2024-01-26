@@ -39,10 +39,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
 {
   std::vector<encrypto::motion::BitVector<>> tmp(64, encrypto::motion::BitVector<>(number_of_simd));
 
-  // Fill tmp with bits of two integers
-  std::uint32_t integer1 = 32;
-  std::uint32_t integer2 = 16;
-
   for (std::size_t i = 0; i < 32; ++i)
   {
     tmp[i] = encrypto::motion::BitVector<>(10, integer1 & (1 << i));
