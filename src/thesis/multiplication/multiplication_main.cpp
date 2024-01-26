@@ -84,9 +84,9 @@ int main(int ac, char *av[])
 
   std::cout << encrypto::motion::PrintStatistics(
       fmt::format("Protocol {} operation {} bit size {} SIMD {}",
-                  encrypto::motion::to_string(encrypto::motion::MpcProtocol::kArithmeticGmw),
+                  encrypto::motion::to_string(protocol),
                   encrypto::motion::to_string(encrypto::motion::IntegerOperationType::kMul), 32,
-                  1000),
+                  number_of_simd),
       accumulated_statistics, accumulated_communication_statistics);
   return EXIT_SUCCESS;
 }
