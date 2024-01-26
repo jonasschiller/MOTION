@@ -76,7 +76,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   encrypto::motion::ShareWrapper output;
   if (check)
   {
-    cd..output = result.Out();
+    output = result.Out();
   }
   party->Run();
   party->Finish();
