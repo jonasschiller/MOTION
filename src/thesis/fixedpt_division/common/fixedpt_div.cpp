@@ -41,8 +41,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   std::uint32_t test1 = 1280;
   std::uint32_t test2 = 256;
 
-  auto tmp1 = encrypto::motion::ToInput(1280);
-  auto tmp2 = encrypto::motion::ToInput(256);
+  encrypto::motion::BitVector<> tmp1 = encrypto::motion::ToInput(1280);
+  encrypto::motion::BitVector<> tmp2 = encrypto::motion::ToInput(256);
   std::vector<encrypto::motion::BitVector<>> tmp;
   tmp.insert(tmp.end(), tmp1.begin(), tmp1.end());
   tmp.insert(tmp.end(), tmp2.begin(), tmp2.end());
@@ -53,7 +53,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
           : party->In<encrypto::motion::MpcProtocol::kBmr>(tmp, 0)};
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
                               "/circuits/fp/divison.bristol"};
-  const auto divsion_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
+  const auto division_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto result{input.Evaluate(division_algorithm)};
   encrypto::motion::ShareWrapper output;
 
@@ -61,10 +61,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   std::cout << "output: " << output << std::endl;
   party->Run();
   party->Finish();
-  if (check)
-  {
-    check_correctness(output);
-  }
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
