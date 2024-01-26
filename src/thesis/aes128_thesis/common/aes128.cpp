@@ -32,7 +32,8 @@
 #include "statistics/run_time_statistics.h"
 #include "utility/config.h"
 
-static void check_correctness(encrypto::motion::ShareWrapper output) {
+static void check_correctness(encrypto::motion::ShareWrapper output)
+{
   // #!/usr/bin/env python3
   // import pyaes
   // ct = pyaes.AES(bytes(16)).encrypt(bytes(16))
@@ -41,10 +42,13 @@ static void check_correctness(encrypto::motion::ShareWrapper output) {
       "01110100110101000010110001010011100110100101111100110010000100011101110000110100010100011111"
       "011100101011110100101001011101100110";
   const auto values{output.As<std::vector<encrypto::motion::BitVector<>>>()};
-  for (std::size_t wire_i = 0; wire_i < 128; ++wire_i) {
-    for (std::size_t simd_j = 0; simd_j < output->GetNumberOfSimdValues(); ++simd_j) {
+  for (std::size_t wire_i = 0; wire_i < 128; ++wire_i)
+  {
+    for (std::size_t simd_j = 0; simd_j < output->GetNumberOfSimdValues(); ++simd_j)
+    {
       auto computed_bit = values[wire_i].Get(simd_j);
-      if ((kCorrectionBits[wire_i] == '1') != computed_bit) {
+      if ((kCorrectionBits[wire_i] == '1') != computed_bit)
+      {
         std::cerr << fmt::format("Computation not correct at output bit {} and SIMD value {}\n",
                                  wire_i, simd_j);
         std::exit(EXIT_FAILURE);
@@ -53,13 +57,14 @@ static void check_correctness(encrypto::motion::ShareWrapper output) {
   }
 }
 
-encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer& party,
+encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer &party,
                                                      std::size_t number_of_simd,
                                                      encrypto::motion::MpcProtocol protocol,
-                                                     bool check) {
+                                                     bool check)
+{
   // TODO tests
   std::vector<encrypto::motion::BitVector<>> tmp(256,
-                                                 encryvipto::motion::BitVector<>(number_of_simd));
+                                                 encrypto::motion::BitVector<>(number_of_simd));
   encrypto::motion::ShareWrapper input{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
@@ -69,14 +74,16 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   const auto aes_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto result{input.Evaluate(aes_algorithm)};
   encrypto::motion::ShareWrapper output;
-  if (check) {
+  if (check)
+  {
     output = result.Out();
   }
   party->Run();
   party->Finish();
-  if (check) {
+  if (check)
+  {
     check_correctness(output);
   }
-  const auto& statistics = party->GetBackend()->GetRunTimeStatistics();
+  const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
