@@ -30,4 +30,4 @@
 encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer& party,
                                                      std::size_t number_of_simd,
                                                      encrypto::motion::MpcProtocol protocol,
-                                                     bool check);
+                                                     std::uint32_t integer1, std::uint32_t integer2);

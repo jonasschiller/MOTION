@@ -59,7 +59,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                      bool check) {
   // TODO tests
   std::vector<encrypto::motion::BitVector<>> tmp(256,
-                                                 encrypto::motion::BitVector<>(number_of_simd));
+                                                 encryvipto::motion::BitVector<>(number_of_simd));
   encrypto::motion::ShareWrapper input{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)

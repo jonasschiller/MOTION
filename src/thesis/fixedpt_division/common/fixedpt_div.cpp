@@ -35,32 +35,46 @@
 encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer &party,
                                                      std::size_t number_of_simd,
                                                      encrypto::motion::MpcProtocol protocol,
-                                                     bool check)
+                                                     std::uint32_t integer1, std::uint32_t integer2)
 {
-  // TODO tests
-  std::uint32_t test1 = 1280;
-  std::uint32_t test2 = 256;
+  std::vector<encrypto::motion::BitVector<>> tmp(64, encrypto::motion::BitVector<>(number_of_simd));
 
-  encrypto::motion::BitVector<> tmp1 = encrypto::motion::ToInput(1280);
-  encrypto::motion::BitVector<> tmp2 = encrypto::motion::ToInput(256);
-  std::vector<encrypto::motion::BitVector<>> tmp;
-  tmp.insert(tmp.end(), tmp1.begin(), tmp1.end());
-  tmp.insert(tmp.end(), tmp2.begin(), tmp2.end());
+  // Fill tmp with bits of two integers
+  std::uint32_t integer1 = 32;
+  std::uint32_t integer2 = 16;
 
+  for (std::size_t i = 0; i < 32; ++i)
+  {
+    tmp[i] = encrypto::motion::BitVector<>(10, integer1 & (1 << i));
+  }
+  for (std::size_t i = 0; i < 32; ++i)
+  {
+    tmp[i + 32] = encrypto::motion::BitVector<>(10, integer2 & (1 << i));
+  }
   encrypto::motion::ShareWrapper input{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
           : party->In<encrypto::motion::MpcProtocol::kBmr>(tmp, 0)};
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
-                              "/circuits/fp/divison.bristol"};
+                              "/circuits/fp/division.bristol"};
   const auto division_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto result{input.Evaluate(division_algorithm)};
   encrypto::motion::ShareWrapper output;
 
   output = result.Out();
-  std::cout << "output: " << output << std::endl;
   party->Run();
   party->Finish();
+  const auto values{output.As<std::vector<encrypto::motion::BitVector<>>>()};
+  for (std::size_t simd_j = 0; simd_j < output->GetNumberOfSimdValues(); ++simd_j)
+  {
+    for (std::size_t wire_i = 0; wire_i < output->GetWires().size(); ++wire_i)
+    {
+      auto computed_bit = values[wire_i].Get(simd_j);
+      std::cout << computed_bit;
+    }
+    std::cout << std::endl;
+  }
+
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
