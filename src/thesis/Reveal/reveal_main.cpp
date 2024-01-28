@@ -34,7 +34,7 @@
 #include <boost/program_options.hpp>
 
 #include "base/party.h"
-#include "common/multiplication.h"
+#include "common/reveal.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
