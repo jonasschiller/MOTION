@@ -36,27 +36,21 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     encrypto::motion::PartyPointer &party, encrypto::motion::MpcProtocol protocol,
     std::size_t number_of_simd, std::size_t bit_size)
 {
-  std::uint32_t input = 0;
-  std::vector<encrypto::motion::SecureUnsignedInteger> a(number_of_simd), b(number_of_simd);
-  std::vector<encrypto::motion::ShareWrapper> output(number_of_simd);
+  const std::vector<encrypto::motion::BitVector<>> temporary_bool(
+      bit_size, encrypto::motion::BitVector<>(number_of_simd));
+  encrypto::motion::SecureUnsignedInteger a, b;
   switch (protocol)
   {
   case encrypto::motion::MpcProtocol::kBooleanGmw:
   {
-    for (std::size_t i = 0; i < number_of_simd; i++)
-    {
-      a[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(input), 0);
-      b[i] = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(encrypto::motion::ToInput(input), 0);
-    }
+    a = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_bool, 0);
+    b = party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(temporary_bool, 0);
     break;
   }
   case encrypto::motion::MpcProtocol::kBmr:
   {
-    for (std::size_t i = 0; i < number_of_simd; i++)
-    {
-      a[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), 0);
-      b[i] = party->In<encrypto::motion::MpcProtocol::kBmr>(encrypto::motion::ToInput(input), 0);
-    }
+    a = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_bool, 0);
+    b = party->In<encrypto::motion::MpcProtocol::kBmr>(temporary_bool, 0);
 
     break;
   }
@@ -64,12 +58,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
     throw std::invalid_argument("Invalid MPC protocol");
   }
 
-  for (std::size_t i = 0; i < number_of_simd; i++)
-  {
-    output[i] = a[i] > b[i];
-  }
-
-  output[number_of_simd - 1] = output[number_of_simd - 1].Out();
+  a > b;
 
   party->Run();
 
