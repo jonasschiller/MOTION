@@ -170,9 +170,6 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
   {
     const std::vector<std::string> other_parties{
         user_options["parties"].as<std::vector<std::string>>()};
-    if (other_parties.size() != 2)
-      throw std::runtime_error(fmt::format(
-          "Incorrect number of parties {} for the chosen input type", other_parties.size()));
     std::string parties("Other parties: ");
     for (auto &party : other_parties)
     {
@@ -192,11 +189,6 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
   }
   else
     throw std::runtime_error("Other parties' information is not set but required");
-
-  if (!user_options.count("input") && !user_options.count("input-file"))
-    throw std::runtime_error("Inputs are not set but required");
-  else if (user_options.count("input") && user_options.count("input-file"))
-    throw std::runtime_error("Two types of inputs are set but only required one");
 
   if (print)
   {
