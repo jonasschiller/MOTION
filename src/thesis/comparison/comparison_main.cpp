@@ -132,7 +132,7 @@ std::pair<program_options::variables_map, std::vector<bool>> ParseProgramOptions
             ("protocol", program_options::value<std::string>()->default_value("BooleanGMW"), "MPC protocol")
             ("online-after-setup", program_options::value<bool>()->default_value(true),
              "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
-             ("simd", program_options::value<std::size_t>()->default_value(1000000), "number of parallel Operations");
+             ("simd", program_options::value<std::size_t>()->default_value(10000), "number of parallel Operations");
   // clang-format on
 
   program_options::variables_map user_options;
