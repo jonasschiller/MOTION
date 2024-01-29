@@ -56,10 +56,8 @@ int main(int ac, char *av[])
       return EXIT_SUCCESS;
 
     const auto number_of_simd{user_options["simd"].as<std::size_t>()};
-    const auto number_of_repetitions{user_options["repetitions"].as<std::size_t>()};
     encrypto::motion::MpcProtocol protocol;
     const std::string protocol_string{user_options["protocol"].as<std::string>()};
-    auto check = user_options["check"].as<bool>();
     const auto integer1{user_options["integer1"].as<std::size_t>()};
     const auto integer2{user_options["integer2"].as<std::size_t>()};
 
@@ -140,7 +138,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("protocol", program_options::value<std::string>()->default_value("BMR"), "Boolean MPC protocol (BMR or GMW)")
       ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
       ("integer1", program_options::value<std::size_t>()->default_value(10),"input 1")
-        ("integer2",program_options::value<std::size_t>()->default_value(5),"input 2");
+      ("integer2",program_options::value<std::size_t>()->default_value(5),"input 2");
   // clang-format on
 
   program_options::variables_map user_options;
