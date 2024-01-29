@@ -41,11 +41,11 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
 
   for (std::size_t i = 0; i < 32; ++i)
   {
-    tmp[i] = encrypto::motion::BitVector<>(10, integer1 & (1 << i));
+    tmp[i] = encrypto::motion::BitVector<>(number_of_simd, integer1 & (1 << i));
   }
   for (std::size_t i = 0; i < 32; ++i)
   {
-    tmp[i + 32] = encrypto::motion::BitVector<>(10, integer2 & (1 << i));
+    tmp[i + 32] = encrypto::motion::BitVector<>(number_of_simd, integer2 & (1 << i));
   }
   encrypto::motion::ShareWrapper input{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
@@ -55,21 +55,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                               "/circuits/fp/division.bristol"};
   const auto division_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto result{input.Evaluate(division_algorithm)};
-  encrypto::motion::ShareWrapper output;
-
-  output = result.Out();
   party->Run();
   party->Finish();
-  const auto values{output.As<std::vector<encrypto::motion::BitVector<>>>()};
-  for (std::size_t simd_j = 0; simd_j < output->GetNumberOfSimdValues(); ++simd_j)
-  {
-    for (std::size_t wire_i = 0; wire_i < output->GetWires().size(); ++wire_i)
-    {
-      auto computed_bit = values[wire_i].Get(simd_j);
-      std::cout << computed_bit;
-    }
-    std::cout << std::endl;
-  }
 
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
