@@ -66,13 +66,13 @@ int main(int ac, char *av[])
     encrypto::motion::PartyPointer party{CreateParty(user_options)};
     // establish communication channels with other parties
 
-    if (protocol_string == "BMR")
+    if (protocol_string == "boolean_bmr")
     {
       auto statistics =
           EvaluateProtocol(party, number_of_simd, encrypto::motion::MpcProtocol::kBmr, integer1, integer2);
       accumulated_statistics.Add(statistics);
     }
-    else if (protocol_string == "GMW" || protocol_string == "BooleanGMW")
+    else if (protocol_string == "boolean_gmw")
     {
       auto statistics = EvaluateProtocol(party, number_of_simd,
                                          encrypto::motion::MpcProtocol::kBooleanGmw, integer1, integer2);
@@ -80,7 +80,7 @@ int main(int ac, char *av[])
     }
     else
     {
-      throw std::invalid_argument("Only GMW or BMR is allowed");
+      throw std::invalid_argument("Only boolean_gmw or boolean_bmr is allowed");
     }
     auto communication_statistics =
         party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
@@ -135,7 +135,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("my-id", program_options::value<std::size_t>(), "my party id")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
       ("simd", program_options::value<std::size_t>()->default_value(1), "number of SIMD values")
-      ("protocol", program_options::value<std::string>()->default_value("BMR"), "Boolean MPC protocol (BMR or GMW)")
+      ("protocol", program_options::value<std::string>()->default_value("boolean_gmw"), "Boolean MPC protocol (BMR or GMW)")
       ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
       ("integer1", program_options::value<std::size_t>()->default_value(10),"input 1")
       ("integer2",program_options::value<std::size_t>()->default_value(5),"input 2");
