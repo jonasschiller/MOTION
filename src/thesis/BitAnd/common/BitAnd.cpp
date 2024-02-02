@@ -129,7 +129,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   default:
     throw std::invalid_argument("Invalid MPC protocol");
   }
-  a = a & b;
+  a & b;
   party->Run();
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
