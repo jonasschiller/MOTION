@@ -40,17 +40,20 @@
 
 namespace program_options = boost::program_options;
 
-bool CheckPartyArgumentSyntax(const std::string& party_argument);
+bool CheckPartyArgumentSyntax(const std::string &party_argument);
 
-std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char* av[]);
+std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char *av[]);
 
-encrypto::motion::PartyPointer CreateParty(const program_options::variables_map& user_options);
+encrypto::motion::PartyPointer CreateParty(const program_options::variables_map &user_options);
 
-int main(int ac, char* av[]) {
-  try {
+int main(int ac, char *av[])
+{
+  try
+  {
     auto [user_options, help_flag] = ParseProgramOptions(ac, av);
     // if help flag is set - print allowed command line arguments and exit
-    if (help_flag) return EXIT_SUCCESS;
+    if (help_flag)
+      return EXIT_SUCCESS;
 
     const auto number_of_simd{user_options["num-simd"].as<std::size_t>()};
     const auto number_of_repetitions{user_options["repetitions"].as<std::size_t>()};
@@ -59,32 +62,39 @@ int main(int ac, char* av[]) {
     auto check = user_options["check"].as<bool>();
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
-
-    for (std::size_t i = 0; i < number_of_repetitions; ++i) {
-      encrypto::motion::PartyPointer party{CreateParty(user_options)};
-      // establish communication channels with other parties
-
-      if (protocol_string == "BMR") {
-        auto statistics =
-            EvaluateProtocol(party, number_of_simd, encrypto::motion::MpcProtocol::kBmr, check);
-        accumulated_statistics.Add(statistics);
-      } else if (protocol_string == "GMW" || protocol_string == "BooleanGMW") {
-        auto statistics = EvaluateProtocol(party, number_of_simd,
-                                           encrypto::motion::MpcProtocol::kBooleanGmw, check);
-        accumulated_statistics.Add(statistics);
-      } else {
-        throw std::invalid_argument("Only GMW or BMR is allowed");
-      }
-      auto communication_statistics =
-          party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
-      accumulated_communication_statistics.Add(communication_statistics);
+    encrypto::motion::MpcProtocol protocol;
+    encrypto::motion::PartyPointer party{CreateParty(user_options)};
+    // establish communication channels with other parties
+    if (protocol_string == "boolean_gmw")
+    {
+      protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
     }
+    else if (protocol_string == "arithmetic_gmw")
+    {
+      throw std::runtime_error("Arithmetic GMW not supported");
+    }
+    else if (protocol_string == "boolean_bmr")
+    {
+      protocol = encrypto::motion::MpcProtocol::kBmr;
+    }
+    else
+    {
+      throw std::runtime_error("Unknown protocol: " + protocol_string);
+    }
+
+    auto statistics = EvaluateProtocol(party, number_of_simd,
+                                       protocol, check);
+    accumulated_statistics.Add(statistics);
+    auto communication_statistics =
+        party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
+    accumulated_communication_statistics.Add(communication_statistics);
 
     std::cout << encrypto::motion::PrintStatistics(
         fmt::format("AES128 with {} SIMD values in {}", number_of_simd, protocol_string),
         accumulated_statistics, accumulated_communication_statistics);
-
-  } catch (std::runtime_error& e) {
+  }
+  catch (std::runtime_error &e)
+  {
     std::cerr << e.what() << "\n";
     return EXIT_FAILURE;
   }
@@ -94,13 +104,15 @@ int main(int ac, char* av[]) {
 const std::regex kPartyArgumentRegex(
     "(\\d+),(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}),(\\d{1,5})");
 
-bool CheckPartyArgumentSyntax(const std::string& party_argument) {
+bool CheckPartyArgumentSyntax(const std::string &party_argument)
+{
   // other party's id, IP address, and port
   return std::regex_match(party_argument, kPartyArgumentRegex);
 }
 
 std::tuple<std::size_t, std::string, std::uint16_t> ParsePartyArgument(
-    const std::string& party_argument) {
+    const std::string &party_argument)
+{
   std::smatch match;
   std::regex_match(party_argument, match, kPartyArgumentRegex);
   auto id = boost::lexical_cast<std::size_t>(match[1]);
@@ -110,7 +122,8 @@ std::tuple<std::size_t, std::string, std::uint16_t> ParsePartyArgument(
 }
 
 // <variables map, help flag>
-std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char* av[]) {
+std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char *av[])
+{
   using namespace std::string_view_literals;
   constexpr std::string_view kConfigFileMessage =
       "configuration file, other arguments will overwrite the parameters read from the configuration file"sv;
@@ -137,13 +150,15 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   program_options::notify(user_options);
 
   // argument help or no arguments (at least a configuration file is expected)
-  if (help) {
+  if (help)
+  {
     std::cout << description << "\n";
     return std::make_pair<program_options::variables_map, bool>({}, true);
   }
 
   // read configuration file
-  if (user_options.count("configuration-file")) {
+  if (user_options.count("configuration-file"))
+  {
     std::ifstream user_options_file(user_options["configuration-file"].as<std::string>().c_str());
     program_options::store(program_options::parse_config_file(user_options_file, description),
                            user_options);
@@ -151,27 +166,39 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   }
 
   // print parsed parameters
-  if (user_options.count("my-id")) {
-    if (print) std::cout << "My id " << user_options["my-id"].as<std::size_t>() << std::endl;
-  } else
+  if (user_options.count("my-id"))
+  {
+    if (print)
+      std::cout << "My id " << user_options["my-id"].as<std::size_t>() << std::endl;
+  }
+  else
     throw std::runtime_error("My id is not set but required");
 
-  if (user_options.count("parties")) {
+  if (user_options.count("parties"))
+  {
     const std::vector<std::string> other_parties{
         user_options["parties"].as<std::vector<std::string>>()};
     std::string parties("Other parties: ");
-    for (auto& party : other_parties) {
-      if (CheckPartyArgumentSyntax(party)) {
-        if (print) parties.append(" " + party);
-      } else {
+    for (auto &party : other_parties)
+    {
+      if (CheckPartyArgumentSyntax(party))
+      {
+        if (print)
+          parties.append(" " + party);
+      }
+      else
+      {
         throw std::runtime_error("Incorrect party argument syntax " + party);
       }
     }
-    if (print) std::cout << parties << std::endl;
-  } else
+    if (print)
+      std::cout << parties << std::endl;
+  }
+  else
     throw std::runtime_error("Other parties' information is not set but required");
 
-  if (print) {
+  if (print)
+  {
     std::cout << "Number of SIMD AES evaluations: " << user_options["num-simd"].as<std::size_t>()
               << std::endl;
 
@@ -180,11 +207,13 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   return std::make_pair(user_options, help);
 }
 
-encrypto::motion::PartyPointer CreateParty(const program_options::variables_map& user_options) {
+encrypto::motion::PartyPointer CreateParty(const program_options::variables_map &user_options)
+{
   const auto parties_string{user_options["parties"].as<const std::vector<std::string>>()};
   const auto number_of_parties{parties_string.size()};
   const auto my_id{user_options["my-id"].as<std::size_t>()};
-  if (my_id >= number_of_parties) {
+  if (my_id >= number_of_parties)
+  {
     throw std::runtime_error(fmt::format(
         "My id needs to be in the range [0, #parties - 1], current my id is {} and #parties is {}",
         my_id, number_of_parties));
@@ -192,9 +221,11 @@ encrypto::motion::PartyPointer CreateParty(const program_options::variables_map&
 
   encrypto::motion::communication::TcpPartiesConfiguration parties_configuration(number_of_parties);
 
-  for (const auto& party_string : parties_string) {
+  for (const auto &party_string : parties_string)
+  {
     const auto [party_id, host, port] = ParsePartyArgument(party_string);
-    if (party_id >= number_of_parties) {
+    if (party_id >= number_of_parties)
+    {
       throw std::runtime_error(
           fmt::format("Party's id needs to be in the range [0, #parties - 1], current id "
                       "is {} and #parties is {}",

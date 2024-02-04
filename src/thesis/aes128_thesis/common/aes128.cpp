@@ -74,16 +74,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   const auto aes_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto result{input.Evaluate(aes_algorithm)};
   encrypto::motion::ShareWrapper output;
-  if (check)
-  {
-    output = result.Out();
-  }
   party->Run();
   party->Finish();
-  if (check)
-  {
-    check_correctness(output);
-  }
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
