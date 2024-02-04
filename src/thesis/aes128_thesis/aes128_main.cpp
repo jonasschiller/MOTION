@@ -62,7 +62,7 @@ int main(int ac, char *av[])
     auto check = user_options["check"].as<bool>();
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
-    encrypto::motion::MpcProtocol protocol;
+
     encrypto::motion::PartyPointer party{CreateParty(user_options)};
     // establish communication channels with other parties
     if (protocol_string == "boolean_gmw")
