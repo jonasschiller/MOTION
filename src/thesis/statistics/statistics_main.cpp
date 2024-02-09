@@ -1,27 +1,3 @@
-// MIT License
-//
-// Copyright (c) 2019 Oleksandr Tkachenko
-// Cryptography and Privacy Engineering Group (ENCRYPTO)
-// TU Darmstadt, Germany
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -38,8 +14,6 @@
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
 #include "utility/typedefs.h"
-
-namespace program_options = boost::program_options;
 
 bool CheckPartyArgumentSyntax(const std::string &party_argument);
 
@@ -58,14 +32,24 @@ int main(int ac, char *av[])
     if (help_flag)
       return EXIT_SUCCESS;
 
-    std::vector<std::uint32_t> input_command_line;
-    std::string input_file_path;
-    input_file_path = user_options["input-file"].as<std::string>();
+    std::size_t input_size;
+    input_size = user_options["input-size"].as<std::size_t>();
+    std::cout << "Test" << std::endl;
+    encrypto::motion::MpcProtocol protocol;
+    std::string protocol_string = user_options.at("protocol").as<std::string>();
+    if (protocol_string == "boolean_gmw")
+      protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
+    else if (protocol_string == "arithmetic_gmw")
+      protocol = encrypto::motion::MpcProtocol::kArithmeticGmw;
+    else if (protocol_string == "boolean_bmr")
+      protocol = encrypto::motion::MpcProtocol::kBmr;
+    else
+      throw std::runtime_error("Unknown protocol: " + protocol_string);
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
     encrypto::motion::PartyPointer party{CreateParty(user_options)};
     // establish communication channels with other parties
-    auto statistics = EvaluateProtocol(party, input_file_path,
+    auto statistics = EvaluateProtocol(party, input_size,
                                        encrypto::motion::MpcProtocol::kBooleanGmw);
     accumulated_statistics.Add(statistics);
     auto communication_statistics =
@@ -73,10 +57,7 @@ int main(int ac, char *av[])
     accumulated_communication_statistics.Add(communication_statistics);
 
     std::cout << encrypto::motion::PrintStatistics(
-        fmt::format("Protocol {} operation {} bit size {} SIMD {}",
-                    encrypto::motion::to_string(encrypto::motion::MpcProtocol::kArithmeticGmw),
-                    encrypto::motion::to_string(encrypto::motion::IntegerOperationType::kMul), 32,
-                    1000),
+        fmt::format("Statistics with input size {} and protocol{}",input_size, encrypto::motion::to_str>
         accumulated_statistics, accumulated_communication_statistics);
   }
   catch (std::runtime_error &e)
@@ -123,11 +104,9 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("configuration-file,f", program_options::value<std::string>(), kConfigFileMessage.data())
       ("my-id", program_options::value<std::size_t>(), "my party id")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
-      ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
-      ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions")
-      ("input-file", program_options::value<std::string>(),
-             "get party's input from file, include path e.g. ../../src/examples/tutorial/crosstabs/data/crosstabs.0.dat (data from first party or categories from second party)")
-      ;
+("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
+      ("protocol",program_options::value<std::string>()->default_value("arithmetic_gmw"),"Protocol either arithmetic_gmw,boolean_gmw or boolean_bmr")
+      ("input-size",program_options::value<std::size_t>(),"input-size for the statistics");
   // clang-format on
 
   program_options::variables_map user_options;
@@ -153,12 +132,14 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
 
   // print parsed parameters
   if (user_options.count("my-id"))
-  {
-    if (print)
-      std::cout << "My id " << user_options["my-id"].as<std::size_t>() << std::endl;
-  }
-  else
-    throw std::runtime_error("My id is not set but required");
+    // print parsed parameters
+    if (user_options.count("my-id"))
+    {
+      if (print)
+        std::cout << "My id " << user_options["my-id"].as<std::size_t>() << std::endl;
+    }
+    else
+      throw std::runtime_error("My id is not set but required");
 
   if (user_options.count("parties"))
   {
@@ -182,10 +163,6 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   }
   else
     throw std::runtime_error("Other parties' information is not set but required");
-  if (!user_options.count("input-file"))
-  {
-    throw std::runtime_error("Inputs are not set but required");
-  }
   if (print)
   {
     std::cout << "Number of SIMD AES evaluations: " << user_options["num-simd"].as<std::size_t>()
