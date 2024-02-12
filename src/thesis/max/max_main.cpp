@@ -9,11 +9,10 @@
 #include <boost/program_options.hpp>
 
 #include "base/party.h"
-#include "common/auction.h"
+#include "common/max.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
-#include "utility/typedefs.h"
 
 namespace program_options = boost::program_options;
 
@@ -22,8 +21,6 @@ bool CheckPartyArgumentSyntax(const std::string &party_argument);
 std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char *av[]);
 
 encrypto::motion::PartyPointer CreateParty(const program_options::variables_map &user_options);
-
-constexpr std::size_t kIllegalProtocol{100}, kIllegalOperationType{100};
 
 int main(int ac, char *av[])
 {
@@ -34,34 +31,41 @@ int main(int ac, char *av[])
     if (help_flag)
       return EXIT_SUCCESS;
 
-    std::size_t input_size;
-    input_size = user_options["input-size"].as<std::size_t>();
+    const auto number_of_simd{user_options["simd"].as<std::size_t>()};
     encrypto::motion::MpcProtocol protocol;
-    std::string protocol_string = user_options.at("protocol").as<std::string>();
-    if (protocol_string == "boolean_gmw")
-      protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
-    else if (protocol_string == "arithmetic_gmw")
-      protocol = encrypto::motion::MpcProtocol::kArithmeticGmw;
-    else if (protocol_string == "boolean_bmr")
-      protocol = encrypto::motion::MpcProtocol::kBmr;
-    else
-      throw std::runtime_error("Unknown protocol: " + protocol_string);
-
+    const std::string protocol_string{user_options["protocol"].as<std::string>()};
+    auto check = user_options["check"].as<bool>();
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
+
     encrypto::motion::PartyPointer party{CreateParty(user_options)};
     // establish communication channels with other parties
-    auto statistics = EvaluateProtocol(party, input_size,
-                                       protocol);
+    if (protocol_string == "boolean_gmw")
+    {
+      protocol = encrypto::motion::MpcProtocol::kBooleanGmw;
+    }
+    else if (protocol_string == "arithmetic_gmw")
+    {
+      throw std::runtime_error("Arithmetic GMW not supported");
+    }
+    else if (protocol_string == "boolean_bmr")
+    {
+      protocol = encrypto::motion::MpcProtocol::kBmr;
+    }
+    else
+    {
+      throw std::runtime_error("Unknown protocol: " + protocol_string);
+    }
+
+    auto statistics = EvaluateProtocol(party, number_of_simd,
+                                       protocol, check);
     accumulated_statistics.Add(statistics);
     auto communication_statistics =
         party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
     accumulated_communication_statistics.Add(communication_statistics);
 
     std::cout << encrypto::motion::PrintStatistics(
-        fmt::format("Protocol {} operation {} ",
-                    encrypto::motion::to_string(protocol),
-                    "private_set_intersection"),
+        fmt::format("AES128 with {} SIMD values in {}", number_of_simd, protocol_string),
         accumulated_statistics, accumulated_communication_statistics);
   }
   catch (std::runtime_error &e)
@@ -99,7 +103,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   constexpr std::string_view kConfigFileMessage =
       "configuration file, other arguments will overwrite the parameters read from the configuration file"sv;
   bool print, help;
-  boost::program_options::options_description description("Allowed options");
+  program_options::options_description description("Allowed options");
   // clang-format off
   description.add_options()
       ("help,h", program_options::bool_switch(&help)->default_value(false),"produce help message")
@@ -108,9 +112,11 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("configuration-file,f", program_options::value<std::string>(), kConfigFileMessage.data())
       ("my-id", program_options::value<std::size_t>(), "my party id")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
-("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
-      ("protocol",program_options::value<std::string>()->default_value("arithmetic_gmw"),"Protocol either arithmetic_gmw,boolean_gmw or boolean_bmr")
-      ("input-size",program_options::value<std::size_t>(),"input-size for the statistics");
+      ("simd", program_options::value<std::size_t>()->default_value(1), "number of SIMD values for AES evaluation")
+      ("protocol", program_options::value<std::string>()->default_value("BMR"), "Boolean MPC protocol (BMR or GMW)")
+      ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
+      ("repetitions", program_options::value<std::size_t>()->default_value(1), "number of repetitions")
+      ("check", program_options::value<bool>()->default_value(false), "check the computed values for correctness (true/1 or false/0)");
   // clang-format on
 
   program_options::variables_map user_options;
@@ -128,9 +134,9 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   // read configuration file
   if (user_options.count("configuration-file"))
   {
-    std::ifstream ifs(user_options["configuration-file"].as<std::string>().c_str());
-    program_options::variables_map user_option_config_file;
-    program_options::store(program_options::parse_config_file(ifs, description), user_options);
+    std::ifstream user_options_file(user_options["configuration-file"].as<std::string>().c_str());
+    program_options::store(program_options::parse_config_file(user_options_file, description),
+                           user_options);
     program_options::notify(user_options);
   }
 
@@ -165,6 +171,14 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
   }
   else
     throw std::runtime_error("Other parties' information is not set but required");
+
+  if (print)
+  {
+    std::cout << "Number of SIMD AES evaluations: " << user_options["num-simd"].as<std::size_t>()
+              << std::endl;
+
+    std::cout << "MPC Protocol: " << user_options["protocol"].as<std::string>() << std::endl;
+  }
   return std::make_pair(user_options, help);
 }
 
