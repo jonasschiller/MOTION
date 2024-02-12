@@ -45,6 +45,10 @@ int main(int ac, char *av[])
       protocol = encrypto::motion::MpcProtocol::kBmr;
     else
       throw std::runtime_error("Unknown protocol: " + protocol_string);
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
     encrypto::motion::PartyPointer party{CreateParty(user_options)};
@@ -57,7 +61,11 @@ int main(int ac, char *av[])
     accumulated_communication_statistics.Add(communication_statistics);
 
     std::cout << encrypto::motion::PrintStatistics(
+<<<<<<< Updated upstream
         fmt::format("Statistics with input size {} and protocol{}",input_size, encrypto::motion::to_str>
+=======
+        fmt::format("Statistics with input size {} and protocol{}",input_size, encrypto::motion::to_string(protocol)),
+>>>>>>> Stashed changes
         accumulated_statistics, accumulated_communication_statistics);
   }
   catch (std::runtime_error &e)
@@ -104,7 +112,11 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("configuration-file,f", program_options::value<std::string>(), kConfigFileMessage.data())
       ("my-id", program_options::value<std::size_t>(), "my party id")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
+<<<<<<< Updated upstream
 ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
+=======
+      ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
+>>>>>>> Stashed changes
       ("protocol",program_options::value<std::string>()->default_value("arithmetic_gmw"),"Protocol either arithmetic_gmw,boolean_gmw or boolean_bmr")
       ("input-size",program_options::value<std::size_t>(),"input-size for the statistics");
   // clang-format on

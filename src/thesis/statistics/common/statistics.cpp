@@ -104,8 +104,13 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
   return keep;
 }
 
+<<<<<<< Updated upstream
 ***Calculate the Mean of the values given by the two parties
         ** /
+=======
+/***Calculate the Mean of the values given by the two parties
+        **/
+>>>>>>> Stashed changes
     void CreateMeanCircuit(StatisticsContext *context)
 {
   auto party_0_values = context->shared_input;
@@ -135,12 +140,20 @@ void CreateMinMaxCircuit(StatisticsContext *context, bool min)
     context->value = context->value.Convert<mo::MpcProtocol::kBooleanGmw>();
     ge = (mo::SecureUnsignedInteger((values[i].Convert<mo::MpcProtocol::kBooleanGmw>())) >
           mo::SecureUnsignedInteger(context->value));
+<<<<<<< Updated upstream
     le = (mo::SecureUnsignedInteger(context->value) >
           mo::SecureUnsignedInteger((values[i].Convert<mo::MpcProtocol::kBooleanGmw>())));
     eq = (context->value == (values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
     // Transform into arithmetic uint 32 mask
     ge = prepare_keep(ge, context->full_zero);
     le = prepare_keep(le, context->full_zero);
+=======
+    le= (mo::SecureUnsignedInteger(context->value)> mo::SecureUnsignedInteger(values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
+    eq = (context->value == (values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
+    // Transform into arithmetic uint 32 mask
+    ge = prepare_keep(ge, context->full_zero);
+    le = prepare_keep(le,context->full_zero);
+>>>>>>> Stashed changes
     eq = prepare_keep(eq, context->full_zero);
     // Calculate the new max value
     if (min == false)
