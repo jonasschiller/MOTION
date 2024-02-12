@@ -54,15 +54,9 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   for (std::size_t i = 0; i < party_0.size(); i++)
   {
     input_0.push_back(
-<<<<<<< Updated upstream
         party->In<mo::MpcProtocol::kArithmeticGmw>(party_0[i], 0));
     input_1.push_back(
         party->In<mo::MpcProtocol::kArithmeticGmw>(party_1[i], 0));
-=======
-        party->In<mo::MpcProtocol::kArithmeticGmw>(std::vector<std::uint32_t>(input_size,party_0[i]), 0));
-    input_1.push_back(
-        party->In<mo::MpcProtocol::kArithmeticGmw>(party_0, 0));
->>>>>>> Stashed changes
   }
 
   mo::ShareWrapper full_zero =
@@ -109,10 +103,6 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
  * */
 void CreatePsiCircuit(PsiContext *context)
 {
-<<<<<<< Updated upstream
-=======
-  auto values = context->input_1;
->>>>>>> Stashed changes
   mo::ShareWrapper id_match;
   mo::ShareWrapper keep;
   for (std::size_t i = 0; i < context->input_1.size(); i++)
@@ -126,10 +116,6 @@ void CreatePsiCircuit(PsiContext *context)
       keep = (keep | id_match);
     }
     keep = prepare_keep(keep, context->full_zero);
-<<<<<<< Updated upstream
-    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1[i]);
-=======
-    context->results[i]=mo::SecureUnsignedInteger(keep * values[i].Get());
->>>>>>> Stashed changes
+    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1[i].Get());
   }
 }

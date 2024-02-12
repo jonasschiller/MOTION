@@ -29,15 +29,9 @@ namespace mo = encrypto::motion;
  */
 struct AuctionContext
 {
-<<<<<<< Updated upstream
-  std::vector<mo::ShareWrapper> bids_price, bids_quantity, offer_price, offer_quantity;
-  mo::ShareWrapper full_zero, zero, one, clearing_price;
-  std::uint32_t price_range;
-=======
-  std::vector<mo::ShareWrapper> bids_price, bids_quantity, offers_price, offers_quantity,indices;
+  std::vector<mo::ShareWrapper> bids_price, bids_quantity, offers_price, offers_quantity, indices;
   mo::ShareWrapper full_zero, zero, clearing_price;
   std::int32_t price_range;
->>>>>>> Stashed changes
 };
 
 mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t input_size,
@@ -52,17 +46,6 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
 
   auto party_id = party->GetConfiguration()->GetMyId();
 
-<<<<<<< Updated upstream
-  std::vector<std::uint32_t> help(input_size, 5);
-  std::vector<mo::ShareWrapper> bids_price, bids_quantity, offer_price, offer_quantity;
-
-  for (std::size_t i = 0; i < input_size; i++)
-  {
-    bids_price = party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0);
-    bids_quantity = party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0);
-    offers_price = party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0);
-    offers_quantity = party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0);
-=======
   std::vector<std::int32_t> help(input_size, 5);
   std::vector<mo::ShareWrapper> bids_price, bids_quantity, offers_price, offers_quantity;
 
@@ -72,7 +55,6 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
     bids_quantity.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
     offers_price.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
     offers_quantity.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
->>>>>>> Stashed changes
   }
 
   mo::ShareWrapper full_zero =
@@ -83,33 +65,23 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   {
     indices.push_back(party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(i), 0));
   }
-<<<<<<< Updated upstream
-  AuctionContext context{bids_price, bids_quantity, offers_price, offers_quantity, full_zero, zero, one, clearing_price, price_range};
+  AuctionContext context{bids_price, bids_quantity, offers_price, offers_quantity, indices, full_zero, zero, clearing_price, price_range};
   CreateAuctionCircuit(&context);
   // Constructs an output gate for each bin.
-  context.clearing_price = context.clearing_price.Out();
-  party->Run();
-  // Converts the outputs to integers.
-  std::uint32_t result = context.clearing_price.As<std::uint32_t>();
-  std::cout << "Market Clearing Price: " << output << std::endl;
-
-=======
-  AuctionContext context{bids_price, bids_quantity, offers_price, offers_quantity,indices, full_zero, zero, clearing_price, price_range};
-  CreateAuctionCircuit(&context);
-  // Constructs an output gate for each bin.
-  mo::SecureSignedInteger clearing_out=mo::SecureSignedInteger(context.clearing_price).Out();
+  mo::SecureSignedInteger clearing_out = mo::SecureSignedInteger(context.clearing_price).Out();
   std::vector<mo::SecureSignedInteger> out(price_range);
-  for (std::size_t i=0;i<price_range;i++){
-  out[i]=mo::SecureSignedInteger(context.indices[i]).Out();
-}  
-party->Run();
+  for (std::size_t i = 0; i < price_range; i++)
+  {
+    out[i] = mo::SecureSignedInteger(context.indices[i]).Out();
+  }
+  party->Run();
   // Converts the outputs to integers.
   std::int32_t result = clearing_out.As<std::int32_t>();
   std::cout << "Market Clearing Price: " << result << std::endl;
-  for (std::size_t i=0;i<price_range;i++){
-  std::cout << out[i].As<std::int32_t>() << " "; 
-}
->>>>>>> Stashed changes
+  for (std::size_t i = 0; i < price_range; i++)
+  {
+    std::cout << out[i].As<std::int32_t>() << " ";
+  }
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
@@ -132,87 +104,57 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
 /**
  * Calculates the market clearing price based on the given offers.
  * */
-<<<<<<< Updated upstream
-void CreateAuctionCircuit(PsiContext *context)
-{
-
-  mo::ShareWrapper id_match;
-  mo::ShareWrapper keep;
-  mo::ShareWrapper offer_sum, bid_sum, diff, min_diff;
-
-  for (std::size_t i = 0; i < context.price_range; i++)
-  {
-    for (std::size_t t = 0; t < context.offer_price.size(); t++)
-    {
-      comp =
-          (mo::SecureUnsignedInteger(context->offers_price.Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureUnsignedInteger(indices[i]));
-      keep = prepare_keep(keep, context->full_zero);
-      offer_sum = offer_sum + keep * context->offers_quantity[t].Get();
-      comp =
-          (mo::SecureUnsignedInteger(context->bids_price.Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureUnsignedInteger(indices[i]));
-      keep = prepare_keep(keep, context->full_zero);
-      bids_sum = bids_sum + keep * context->bids_quantity[t].Get();
-    }
-    diff = offer_sum - bid_sum;
-=======
 void CreateAuctionCircuit(AuctionContext *context)
 {
 
   mo::ShareWrapper comp;
   mo::ShareWrapper keep;
-  mo::ShareWrapper offer_sum, bids_sum, diff, min_diff,le,ge,eq;
- 
+  mo::ShareWrapper offer_sum, bids_sum, diff, min_diff, le, ge, eq;
+
   for (std::size_t i = 0; i < context->price_range; i++)
   {
-   for (std::size_t t = 0; t < context->offers_price.size(); t++)
+    for (std::size_t t = 0; t < context->offers_price.size(); t++)
     {
-     comp =
+      comp =
           (mo::SecureSignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
            mo::SecureSignedInteger(context->indices[i]));
-     keep = prepare_keep(comp, context->full_zero);
-     if(t==0){
-     offer_sum=keep*context->offers_quantity[t].Get();
-     }else{
-     offer_sum = offer_sum + keep * context->offers_quantity[t].Get();
-     }
-     comp =
+      keep = prepare_keep(comp, context->full_zero);
+      if (t == 0)
+      {
+        offer_sum = keep * context->offers_quantity[t].Get();
+      }
+      else
+      {
+        offer_sum = offer_sum + keep * context->offers_quantity[t].Get();
+      }
+      comp =
           (mo::SecureSignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
            mo::SecureSignedInteger(context->indices[i]));
       keep = prepare_keep(comp, context->full_zero);
-     if(t==0){
-     bids_sum=keep*context->bids_quantity[t].Get();
-     }else{
-     bids_sum = bids_sum + keep * context->bids_quantity[t].Get();
-     }
+      if (t == 0)
+      {
+        bids_sum = keep * context->bids_quantity[t].Get();
+      }
+      else
+      {
+        bids_sum = bids_sum + keep * context->bids_quantity[t].Get();
+      }
     }
     diff = offer_sum - bids_sum;
->>>>>>> Stashed changes
     if (i == 0)
     {
       min_diff = diff;
     }
 
-<<<<<<< Updated upstream
-    le = (mo::SecureUnsignedInteger(min_diff) >
-          mo::SecureUnsignedInteger(diff));
-    ge = (mo::SecureUnsignedInteger(diff) >= mo::SecureUnsignedInteger(min_diff));
-    ge = prepare_keep(ge, context.full_zero);
-    le = prepare_keep(le, context.full_zero);
-    context.clearing_price = ge * context.clearing_price + le * indices[i];
-    min_diff = ge * min_diff + le * diff;
-=======
     le = (mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()) >
           mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
     ge = (mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()) > mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
-    eq = (mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>())==mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
+    eq = (mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()) == mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
     ge = prepare_keep(ge, context->full_zero);
     le = prepare_keep(le, context->full_zero);
     eq = prepare_keep(eq, context->full_zero);
-    context->clearing_price = ge * context->clearing_price + le * context->indices[i].Convert<mo::MpcProtocol::kArithmeticGmw>()+eq*context->clearing_price;
-    context->indices[i]=diff;
-    min_diff = ge * min_diff + le * diff+ eq*diff;
->>>>>>> Stashed changes
+    context->clearing_price = ge * context->clearing_price + le * context->indices[i].Convert<mo::MpcProtocol::kArithmeticGmw>() + eq * context->clearing_price;
+    context->indices[i] = diff;
+    min_diff = ge * min_diff + le * diff + eq * diff;
   }
 }
