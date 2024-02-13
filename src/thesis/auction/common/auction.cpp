@@ -107,7 +107,7 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
 void CreateAuctionCircuit(AuctionContext *context)
 {
 
-  mo::ShareWrapper comp;
+  mo::ShareWrapper comp, eq;
   mo::ShareWrapper keep;
   mo::ShareWrapper offer_sum, bids_sum, diff, min_diff, le, ge, eq;
 
@@ -118,7 +118,10 @@ void CreateAuctionCircuit(AuctionContext *context)
       comp =
           (mo::SecureUnsignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
            mo::SecureUnsignedInteger(context->indices[i]));
-      keep = prepare_keep(comp, context->full_zero);
+      eq =
+          (mo::SecureUnsignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) ==
+           mo::SecureUnsignedInteger(context->indices[i]));
+      keep = prepare_keep(comp | eq, context->full_zero);
       if (t == 0)
       {
         offer_sum = keep * context->offers_quantity[t].Get();
@@ -130,7 +133,11 @@ void CreateAuctionCircuit(AuctionContext *context)
       comp =
           (mo::SecureUnsignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
            mo::SecureUnsignedInteger(context->indices[i]));
-      keep = prepare_keep(comp, context->full_zero);
+      eq =
+          (mo::SecureUnsignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
+           mo::SecureUnsignedInteger(context->indices[i]));
+      keep = prepare_keep(comp | eq, context->full_zero);
+
       if (t == 0)
       {
         bids_sum = keep * context->bids_quantity[t].Get();
