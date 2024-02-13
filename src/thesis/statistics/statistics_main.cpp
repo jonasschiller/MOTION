@@ -15,6 +15,8 @@
 #include "statistics/analysis.h"
 #include "utility/typedefs.h"
 
+namespace program_options = boost::program_options;
+
 bool CheckPartyArgumentSyntax(const std::string &party_argument);
 
 std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char *av[]);
