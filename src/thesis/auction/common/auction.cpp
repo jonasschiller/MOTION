@@ -80,7 +80,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   std::cout << "Market Clearing Price: " << result << std::endl;
   for (std::size_t i = 0; i < price_range; i++)
   {
-    std::cout << out[i].As<std::int32_t>() << " ";
+    std::cout << out[i].As<std::uint32_t>() << " ";
   }
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
@@ -116,8 +116,8 @@ void CreateAuctionCircuit(AuctionContext *context)
     for (std::size_t t = 0; t < context->offers_price.size(); t++)
     {
       comp =
-          (mo::SecureSignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureSignedInteger(context->indices[i]));
+          (mo::SecureUnsignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
+           mo::SecureUnsignedInteger(context->indices[i]));
       keep = prepare_keep(comp, context->full_zero);
       if (t == 0)
       {
@@ -128,8 +128,8 @@ void CreateAuctionCircuit(AuctionContext *context)
         offer_sum = offer_sum + keep * context->offers_quantity[t].Get();
       }
       comp =
-          (mo::SecureSignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureSignedInteger(context->indices[i]));
+          (mo::SecureUnsignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
+           mo::SecureUnsignedInteger(context->indices[i]));
       keep = prepare_keep(comp, context->full_zero);
       if (t == 0)
       {
@@ -140,16 +140,16 @@ void CreateAuctionCircuit(AuctionContext *context)
         bids_sum = bids_sum + keep * context->bids_quantity[t].Get();
       }
     }
-    diff = offer_sum - bids_sum;
+    diff = bids_sum - offer_sum;
     if (i == 0)
     {
       min_diff = diff;
     }
 
-    le = (mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()) >
-          mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
-    ge = (mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()) > mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
-    eq = (mo::SecureSignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()) == mo::SecureSignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
+    le = (mo::SecureUnsignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()) >
+          mo::SecureUnsignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
+    ge = (mo::SecureUnsignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()) > mo::SecureUnsignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
+    eq = (mo::SecureUnsignedInteger(diff.Convert<mo::MpcProtocol::kBooleanGmw>()) == mo::SecureUnsignedInteger(min_diff.Convert<mo::MpcProtocol::kBooleanGmw>()));
     ge = prepare_keep(ge, context->full_zero);
     le = prepare_keep(le, context->full_zero);
     eq = prepare_keep(eq, context->full_zero);
