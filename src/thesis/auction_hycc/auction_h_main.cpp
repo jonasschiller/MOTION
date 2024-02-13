@@ -8,8 +8,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 
-#include "base/auction_h.h"
-#include "common/max.h"
+#include "base/party.h"
+#include "common/auction_h.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
