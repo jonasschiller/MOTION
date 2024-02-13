@@ -107,7 +107,7 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
 void CreateAuctionCircuit(AuctionContext *context)
 {
 
-  mo::ShareWrapper comp, eq;
+  mo::ShareWrapper comp;
   mo::ShareWrapper keep;
   mo::ShareWrapper offer_sum, bids_sum, diff, min_diff, le, ge, eq;
 
