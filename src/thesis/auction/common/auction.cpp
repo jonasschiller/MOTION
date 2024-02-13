@@ -70,18 +70,10 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   // Constructs an output gate for each bin.
   mo::SecureSignedInteger clearing_out = mo::SecureSignedInteger(context.clearing_price).Out();
   std::vector<mo::SecureSignedInteger> out(price_range);
-  for (std::size_t i = 0; i < price_range; i++)
-  {
-    out[i] = mo::SecureSignedInteger(context.indices[i]).Out();
-  }
   party->Run();
   // Converts the outputs to integers.
   std::int32_t result = clearing_out.As<std::int32_t>();
   std::cout << "Market Clearing Price: " << result << std::endl;
-  for (std::size_t i = 0; i < price_range; i++)
-  {
-    std::cout << out[i].As<std::uint32_t>() << " ";
-  }
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
@@ -161,7 +153,6 @@ void CreateAuctionCircuit(AuctionContext *context)
     le = prepare_keep(le, context->full_zero);
     eq = prepare_keep(eq, context->full_zero);
     context->clearing_price = ge * context->clearing_price + le * context->indices[i].Convert<mo::MpcProtocol::kArithmeticGmw>() + eq * context->clearing_price;
-    context->indices[i] = diff;
     min_diff = ge * min_diff + le * diff + eq * diff;
   }
 }
