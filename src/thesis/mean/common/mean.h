@@ -14,6 +14,3 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
 
 void CreateMeanCircuit(StatisticsContext *context);
 void CreateSumCircuit(StatisticsContext *context);
-void CreateMinMaxCircuit(StatisticsContext *context, bool min);
-encrypto::motion::ShareWrapper prepare_keep(encrypto::motion::ShareWrapper keep,
-                                            encrypto::motion::ShareWrapper full_zero);

@@ -1,4 +1,4 @@
-#include "statistics.h"
+#include "min.h"
 
 #include <cstddef>
 #include <fstream>
@@ -70,20 +70,11 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   StatisticsContext context{shared_input, sum, mean, size, value, full_zero};
   // Create the circuit
 
-  CreateSumCircuit(&context);
   // CreateMeanCircuit(&context);
-  CreateMinMaxCircuit(&context, false);
-  max_value = context.value.Out();
-  CreateMinMaxCircuit(&context, true);
+  CreateMinMaxCircuit(&context, True);
   min_value = context.value.Out();
-  // Create the output gate
-  sum = context.sum.Out();
-  mean = context.mean.Out();
   party->Run();
-  std::cout << "Sum " << sum.As<std::uint32_t>() << std::endl;
-  std::cout << "Mean " << mean.As<std::uint32_t>() << std::endl;
-  std::cout << "Max " << max_value.As<std::uint32_t>() << std::endl;
-  std::cout << "Min " << min_value.As<std::uint32_t>() << std::endl;
+  std::cout << "Max " << min_value.As<std::uint32_t>() << std::endl;
   party->Finish();
 
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
@@ -102,25 +93,6 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
   keep = mo::ShareWrapper::Concatenate(keep_concat);
   keep = keep.Convert<mo::MpcProtocol::kArithmeticGmw>();
   return keep;
-}
-
-/***Calculate the Mean of the values given by the two parties
- **/
-void CreateMeanCircuit(StatisticsContext *context)
-{
-  auto party_0_values = context->shared_input;
-  CreateSumCircuit(context);
-  context->mean = mo::SecureUnsignedInteger(context->sum.Convert<mo::MpcProtocol::kBooleanGmw>()) /
-                  mo::SecureUnsignedInteger(context->input_size);
-}
-
-void CreateSumCircuit(StatisticsContext *context)
-{
-  auto party_0_values = context->shared_input;
-  for (std::size_t i = 0; i < party_0_values.size(); i++)
-  {
-    context->sum += party_0_values[i].Get();
-  }
 }
 
 void CreateMinMaxCircuit(StatisticsContext *context, bool min)

@@ -1,4 +1,4 @@
-#include "max.h"
+#include "mean.h"
 
 #include <cstddef>
 #include <fstream>
@@ -70,59 +70,35 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   StatisticsContext context{shared_input, sum, mean, size, value, full_zero};
   // Create the circuit
 
-  // CreateMeanCircuit(&context);
-  CreateMinMaxCircuit(&context, false);
-  max_value = context.value.Out();
+  CreateSumCircuit(&context);
+  CreateMeanCircuit(&context);
+  // Create the output gate
+  sum = context.sum.Out();
+  mean = context.mean.Out();
   party->Run();
-  std::cout << "Max " << max_value.As<std::uint32_t>() << std::endl;
+  std::cout << "Sum " << sum.As<std::uint32_t>() << std::endl;
+  std::cout << "Mean " << mean.As<std::uint32_t>() << std::endl;
   party->Finish();
 
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
 
-/**
- * Transform the boolean value in keep into an arithmetic share.
- */
-mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
+/***Calculate the Mean of the values given by the two parties
+ **/
+void CreateMeanCircuit(StatisticsContext *context)
 {
-  std::vector<mo::ShareWrapper> keep_concat;
-  keep_concat.push_back(keep);
-  for (std::size_t s = 0; s < 31; s++)
-    keep_concat.push_back(full_zero);
-  keep = mo::ShareWrapper::Concatenate(keep_concat);
-  keep = keep.Convert<mo::MpcProtocol::kArithmeticGmw>();
-  return keep;
+  auto party_0_values = context->shared_input;
+  CreateSumCircuit(context);
+  context->mean = mo::SecureUnsignedInteger(context->sum.Convert<mo::MpcProtocol::kBooleanGmw>()) /
+                  mo::SecureUnsignedInteger(context->input_size);
 }
 
-void CreateMinMaxCircuit(StatisticsContext *context, bool min)
+void CreateSumCircuit(StatisticsContext *context)
 {
-  auto values = context->shared_input;
-
-  mo::ShareWrapper ge, le, eq;
-
-  context->value = values[0];
-  for (std::size_t i = 0; i < values.size(); i++)
+  auto party_0_values = context->shared_input;
+  for (std::size_t i = 0; i < party_0_values.size(); i++)
   {
-    context->value = context->value.Convert<mo::MpcProtocol::kBooleanGmw>();
-    ge = (mo::SecureUnsignedInteger((values[i].Convert<mo::MpcProtocol::kBooleanGmw>())) >
-          mo::SecureUnsignedInteger(context->value));
-    le = (mo::SecureUnsignedInteger(context->value) > mo::SecureUnsignedInteger(values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
-    eq = (context->value == (values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
-    // Transform into arithmetic uint 32 mask
-    ge = prepare_keep(ge, context->full_zero);
-    le = prepare_keep(le, context->full_zero);
-    eq = prepare_keep(eq, context->full_zero);
-    // Calculate the new max value
-    if (min == false)
-    {
-      context->value = le * context->value.Convert<mo::MpcProtocol::kArithmeticGmw>() +
-                       ge * values[i].Get() + eq * values[i].Get();
-    }
-    else
-    {
-      context->value = ge * context->value.Convert<mo::MpcProtocol::kArithmeticGmw>() +
-                       le * values[i].Get() + eq * values[i].Get();
-    }
+    context->sum += party_0_values[i].Get();
   }
 }
