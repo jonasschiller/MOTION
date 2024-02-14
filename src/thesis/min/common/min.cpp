@@ -71,7 +71,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   // Create the circuit
 
   // CreateMeanCircuit(&context);
-  CreateMinMaxCircuit(&context, True);
+  CreateMinMaxCircuit(&context, true);
   min_value = context.value.Out();
   party->Run();
   std::cout << "Max " << min_value.As<std::uint32_t>() << std::endl;

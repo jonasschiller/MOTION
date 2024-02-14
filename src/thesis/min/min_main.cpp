@@ -9,7 +9,7 @@
 #include <boost/program_options.hpp>
 
 #include "base/party.h"
-#include "common/max.h"
+#include "common/min.h"
 #include "communication/communication_layer.h"
 #include "communication/tcp_transport.h"
 #include "statistics/analysis.h"
