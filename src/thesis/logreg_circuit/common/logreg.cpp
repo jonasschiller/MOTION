@@ -24,7 +24,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
           : party->In<encrypto::motion::MpcProtocol::kBmr>(tmp, 0)};
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
-                              "/circuits/thesis/log_reg.bristol"};
+                              "/circuits/thesis/logreg.bristol"};
   const auto logreg_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto result{input.Evaluate(aes_algorithm)};
   encrypto::motion::ShareWrapper output;
