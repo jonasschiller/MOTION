@@ -1,4 +1,4 @@
-#include "auction_h.h"
+#include "LeNet.h"
 
 #include "algorithm/algorithm_description.h"
 #include "protocols/bmr/bmr_wire.h"
@@ -20,9 +20,9 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
           : party->In<encrypto::motion::MpcProtocol::kBmr>(tmp, 0)};
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
-                              "/circuits/benchmarks/auction.bristol"};
-  const auto auction_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
-  const auto result{input.Evaluate(auction_algorithm)};
+                              "/circuits/LeNet/convL2.bristol"};
+  const auto LeNet_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
+  const auto result{input.Evaluate(LeNet_algorithm)};
   encrypto::motion::ShareWrapper output;
   party->Run();
   party->Finish();

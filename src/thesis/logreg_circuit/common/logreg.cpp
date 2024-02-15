@@ -14,36 +14,31 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                      std::size_t number_of_simd,
                                                      encrypto::motion::MpcProtocol protocol)
 {
-
-  // TODO load the correct input format for the circuit both inputs are connected together as one long BitVector of required length
-
-  std::vector<encrypto::motion::BitVector<>> data(35510,
-                                                  encrypto::motion::BitVector<>(1));
-  std::vector<encrypto::motion::BitVector<>> weights(10,
-                                                     encrypto::motion::BitVector<>(1));
-  encrypto::motion::ShareWrapper data_shared{
+  std::vector<encrypto::motion::BitVector<>> tmp(352,
+                                                 encrypto::motion::BitVector<>(1));
+  std::vector<encrypto::motion::BitVector<>> weights(320, encrypto::motion::BitVector<>(1));
+  encrypto::motion::ShareWrapper data{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
-          ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(data, 0)
-          : party->In<encrypto::motion::MpcProtocol::kBmr>(data, 0)};
+          ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
+          : party->In<encrypto::motion::MpcProtocol::kBmr>(tmp, 0)};
   encrypto::motion::ShareWrapper weights_shared{
-      protocol == encrypto::motion::MpcProtocol::kBooleanGmw
-          ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(weights, 0)
-          : party->In<encrypto::motion::MpcProtocol::kBmr>(weights, 0)};
+      protocol == encrypto::motion::MpcProtocol::kBooleanGmw ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(weights, 0)
+                                                             : party->In<encrypto::motion::MpcProtocol::kBmr>(weights, 0)};
+
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
-                              "/circuits/Benchmarks/logreg.bristol"};
+                              "/circuits/logreg_single.bristol"};
   const auto logreg_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   encrypto::motion::ShareWrapper input;
-  std::vector<encrypto::motion::ShareWrapper> concat;
-  concat.push_back(data_shared);
-  concat.push_back(weights_shared);
-  input = encrypto::motion::ShareWrapper::Concatenate(concat);
-  const auto result{input.Evaluate(logreg_algorithm)};
-
-  encrypto::motion::ShareWrapper output;
-
-  output = result.Out();
-
-  party->Run();
+  for (int i = 0; i < 2000; i++)
+  {
+    std::vector<encrypto::motion::ShareWrapper> keep_concat;
+    keep_concat.push_back(data);
+    keep_concat.push_back(weights_shared);
+    input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
+    const auto result{input.Evaluate(logreg_algorithm)};
+    weights_shared = result;
+    party->Run();
+  }
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
