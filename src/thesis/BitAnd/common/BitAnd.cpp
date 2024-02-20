@@ -122,8 +122,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(
   }
   case encrypto::motion::MpcProtocol::kBmr:
   {
-    a = DummyBooleanGmwShare(party, 1, number_of_simd);
-    b = DummyBooleanGmwShare(party, 1, number_of_simd);
+    a = DummyBmrShare(party, 1, number_of_simd);
+    b = DummyBmrShare(party, 1, number_of_simd);
     break;
   }
   default:
