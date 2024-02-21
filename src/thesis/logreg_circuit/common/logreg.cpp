@@ -16,7 +16,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
 {
   std::vector<encrypto::motion::BitVector<>> tmp(352,
                                                  encrypto::motion::BitVector<>(1));
-  std::vector<encrypto::motion::BitVector<>> weights(320, encrypto::motion::BitVector<>(1));
+  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(1));
   encrypto::motion::ShareWrapper data{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
@@ -26,10 +26,10 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                              : party->In<encrypto::motion::MpcProtocol::kBmr>(weights, 0)};
 
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
-                              "/circuits/logreg_single.bristol"};
+                              "/circuits/benchmarks/logreg.bristol"};
   const auto logreg_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   encrypto::motion::ShareWrapper input;
-  for (int i = 0; i < 2000; i++)
+  for (int i = 0; i < 600; i++)
   {
     std::vector<encrypto::motion::ShareWrapper> keep_concat;
     keep_concat.push_back(data);
@@ -37,8 +37,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
     const auto result{input.Evaluate(logreg_algorithm)};
     weights_shared = result;
-    party->Run();
   }
+  party->Run();
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
