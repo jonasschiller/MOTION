@@ -60,7 +60,7 @@ int main(int ac, char *av[])
     const std::string protocol_string{user_options["protocol"].as<std::string>()};
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
-
+    encrypto::motion::PartyPointer party{CreateParty(user_options)};
     // establish communication channels with other parties
     if (protocol_string == "boolean_gmw")
     {
@@ -134,11 +134,11 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
       ("num-simd", program_options::value<std::size_t>()->default_value(1), "number of SIMD values for AES evaluation")
       ("protocol", program_options::value<std::string>()->default_value("boolean_gmw"), "Boolean MPC protocol (boolean_bmr or GMW)")
-      ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
+      ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)");
 
-      // clang-format on
+  // clang-format on
 
-      program_options::variables_map user_options;
+  program_options::variables_map user_options;
 
   program_options::store(program_options::parse_command_line(ac, av, description), user_options);
   program_options::notify(user_options);
