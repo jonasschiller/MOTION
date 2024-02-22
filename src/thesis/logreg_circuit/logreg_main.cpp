@@ -80,6 +80,7 @@ int main(int ac, char *av[])
     }
     auto statistics = EvaluateProtocol(party, number_of_simd,
                                        protocol);
+    accumulated_statistics.Add(statistics);
     auto communication_statistics =
         party->GetBackend()->GetCommunicationLayer().GetTransportStatistics();
     accumulated_communication_statistics.Add(communication_statistics);
