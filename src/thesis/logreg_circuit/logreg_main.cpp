@@ -55,7 +55,7 @@ int main(int ac, char *av[])
     if (help_flag)
       return EXIT_SUCCESS;
 
-    const auto number_of_simd{user_options["num-simd"].as<std::size_t>()};
+    const auto number_of_simd{user_options["simd"].as<std::size_t>()};
     encrypto::motion::MpcProtocol protocol;
     const std::string protocol_string{user_options["protocol"].as<std::string>()};
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
@@ -132,7 +132,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("configuration-file,f", program_options::value<std::string>(), kConfigFileMessage.data())
       ("my-id", program_options::value<std::size_t>(), "my party id")
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
-      ("num-simd", program_options::value<std::size_t>()->default_value(1), "number of SIMD values for AES evaluation")
+      ("simd", program_options::value<std::size_t>()->default_value(1), "number of SIMD values for AES evaluation")
       ("protocol", program_options::value<std::string>()->default_value("boolean_gmw"), "Boolean MPC protocol (boolean_bmr or GMW)")
       ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)");
 
@@ -193,7 +193,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
 
   if (print)
   {
-    std::cout << "Number of SIMD AES evaluations: " << user_options["num-simd"].as<std::size_t>()
+    std::cout << "Number of SIMD AES evaluations: " << user_options["simd"].as<std::size_t>()
               << std::endl;
 
     std::cout << "MPC Protocol: " << user_options["protocol"].as<std::string>() << std::endl;

@@ -11,7 +11,7 @@
 #include "utility/config.h"
 
 encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer &party,
-                                                     std::size_t number_of_simd,
+                                                     std::size_t iterations,
                                                      encrypto::motion::MpcProtocol protocol)
 {
   std::vector<encrypto::motion::BitVector<>> tmp(352,
@@ -29,7 +29,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                               "/circuits/benchmarks/logreg.bristol"};
   const auto logreg_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   encrypto::motion::ShareWrapper input;
-  for (int i = 0; i < 600; i++)
+  for (int i = 0; i < iterations; i++)
   {
     std::vector<encrypto::motion::ShareWrapper> keep_concat;
     keep_concat.push_back(data);
