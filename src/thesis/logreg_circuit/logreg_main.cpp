@@ -57,7 +57,7 @@ int main(int ac, char *av[])
 
     const auto number_of_simd{user_options["simd"].as<std::size_t>()};
     encrypto::motion::MpcProtocol protocol;
-    const std::string protocol_string{user_options["protocol"].as<std::string>()};
+    ht const std::string protocol_string{user_options["protocol"].as<std::string>()};
     encrypto::motion::AccumulatedRunTimeStatistics accumulated_statistics;
     encrypto::motion::AccumulatedCommunicationStatistics accumulated_communication_statistics;
     encrypto::motion::PartyPointer party{CreateParty(user_options)};
