@@ -42,7 +42,13 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     const auto weights{output.As<std::vector<mo::BitVector<>>>};
     for (int t = 0; t < 5; t++)
     {
-      weights[0].Get(0);
+      for (int k = 0; k < 32; k++)
+      {
+        for (int j = 0; j < 300; j++)
+        {
+          weights[t * 32 + k].Get(j);
+        }
+      }
     }
   }
 
