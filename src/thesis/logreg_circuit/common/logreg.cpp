@@ -15,8 +15,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                      encrypto::motion::MpcProtocol protocol)
 {
   std::vector<encrypto::motion::BitVector<>> tmp(352,
-                                                 encrypto::motion::BitVector<>(1));
-  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(1));
+                                                 encrypto::motion::BitVector<>(300));
+  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(300));
   encrypto::motion::ShareWrapper data{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
