@@ -51,6 +51,11 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
         }
       }
     }
+    weights_shared{
+        protocol == encrypto::motion::MpcProtocol::kBooleanGmw ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
+                                                               : party->In<encrypto::motion::MpcProtocol::kBmr>(tmp, 0)};
+    party->Run();
+    party->Finish();
   }
 
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
