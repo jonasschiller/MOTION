@@ -9,7 +9,7 @@
 #include "statistics/analysis.h"
 #include "statistics/run_time_statistics.h"
 #include "utility/config.h"
-
+namespace mo = encrypto::motion;
 encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer &party,
                                                      std::size_t iterations,
                                                      encrypto::motion::MpcProtocol protocol)
@@ -39,14 +39,15 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     const auto output = result.Out();
     party->Run();
     party->Finish();
-    const auto weights{output.As<std::vector<mo::BitVector<>>>};
+    const auto weights{output.As<std::vector<mo::BitVector<>>>()};
+    std::vector<encrypto::motion::BitVector<>> tmp;
     for (int t = 0; t < 5; t++)
     {
       for (int k = 0; k < 32; k++)
       {
         for (int j = 0; j < 300; j++)
         {
-          weights[t * 32 + k].Get(j);
+          tmp.push_pack(mo::BitVector(1, weights[t * 32 + k].Get(j)));
         }
       }
     }
