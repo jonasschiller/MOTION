@@ -36,7 +36,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     keep_concat.push_back(weights_shared);
     input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
     const auto result{input.Evaluate(logreg_algorithm)};
-    const auto output = result.Out();
+    const auto output = result;
     party->Run();
     party->Finish();
   }
