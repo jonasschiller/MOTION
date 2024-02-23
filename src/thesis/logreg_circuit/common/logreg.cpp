@@ -15,8 +15,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                      encrypto::motion::MpcProtocol protocol)
 {
   std::vector<encrypto::motion::BitVector<>> tmp(352,
-                                                 encrypto::motion::BitVector<>(300));
-  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(300));
+                                                 encrypto::motion::BitVector<>(1));
+  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(1));
   encrypto::motion::ShareWrapper data{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
@@ -36,21 +36,16 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     keep_concat.push_back(weights_shared);
     input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
     const auto result{input.Evaluate(logreg_algorithm)};
-    weights_shared = result;
-    for (int j = 0; j < 5; j++)
+    const auto output = result.Out();
+    party->Run();
+    party->Finish();
+    const auto weights{output.As<std::vector<mo::BitVector<>>>};
+    for (int t = 0; t < 5; t++)
     {
-      std::vector<std::vector<mo::ShareWrapper>> keep_concat(300);
-      for (int k = 0; k < 32; k++)
-      {
-        for (int t = 0; t < 300; t++)
-        {
-          keep_concat[t].push_back(result[j * 32 + k][t]);
-        }
-      }
+      weights[0].Get(0);
     }
   }
-  party->Run();
-  party->Finish();
+
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
 }
