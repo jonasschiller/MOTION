@@ -37,6 +37,17 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
     const auto result{input.Evaluate(logreg_algorithm)};
     weights_shared = result;
+    for (int j = 0; j < 5; j++)
+    {
+      std::vector<std::vector<mo::ShareWrapper>> keep_concat(300);
+      for (int k = 0; k < 32; k++)
+      {
+        for (int t = 0; t < 300; t++)
+        {
+          keep_concat[t].push_back(result[j * 32 + k][t]);
+        }
+      }
+    }
   }
   party->Run();
   party->Finish();
