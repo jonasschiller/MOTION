@@ -47,7 +47,7 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
       {
         for (int j = 0; j < 300; j++)
         {
-          tmp.push_pack(mo::BitVector(1, weights[t * 32 + k].Get(j)));
+          tmp.push_back(mo::BitVector(1, weights[t * 32 + k].Get(j)));
         }
       }
     }
