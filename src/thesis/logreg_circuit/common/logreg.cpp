@@ -27,7 +27,10 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
 
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
                               "/circuits/benchmarks/logreg.bristol"};
+  const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
+                              "/circuits/benchmarks/weights.bristol"};
   const auto logreg_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
+  const auto weights_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm2)};
   encrypto::motion::ShareWrapper input;
   for (int i = 0; i < iterations; i++)
   {
@@ -35,8 +38,15 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
     keep_concat.push_back(data);
     keep_concat.push_back(weights_shared);
     input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
-    const auto result{input.Evaluate(logreg_algorithm)};
-    const auto output = result;
+    auto result{input.Evaluate(logreg_algorithm)};
+    auto output = result.Unsimdify();
+    std::vector<encrypto::motion::ShareWrapper> sum;
+    for (int t = 0; t < 300; t++)
+    {
+      sum.push_back(output[i]);
+    }
+    input = mo::ShareWrapper::Concatenate(sum);
+    auto result2{input.Evaluate(weights_algorithm)};
     party->Run();
     party->Finish();
   }
