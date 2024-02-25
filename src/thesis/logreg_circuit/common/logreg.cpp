@@ -15,8 +15,8 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
                                                      encrypto::motion::MpcProtocol protocol)
 {
   std::vector<encrypto::motion::BitVector<>> tmp(352,
-                                                 encrypto::motion::BitVector<>(1));
-  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(1));
+                                                 encrypto::motion::BitVector<>(300));
+  std::vector<encrypto::motion::BitVector<>> weights(160, encrypto::motion::BitVector<>(300));
   encrypto::motion::ShareWrapper data{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw
           ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(tmp, 0)
@@ -24,7 +24,6 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   encrypto::motion::ShareWrapper weights_shared{
       protocol == encrypto::motion::MpcProtocol::kBooleanGmw ? party->In<encrypto::motion::MpcProtocol::kBooleanGmw>(weights, 0)
                                                              : party->In<encrypto::motion::MpcProtocol::kBmr>(weights, 0)};
-
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) +
                               "/circuits/benchmarks/logreg.bristol"};
   const auto kPathToAlgorithm2{std::string(encrypto::motion::kRootDir) +
@@ -33,24 +32,28 @@ encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPoin
   const auto weights_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm2)};
   encrypto::motion::ShareWrapper input, result;
   std::vector<encrypto::motion::ShareWrapper> keep_concat, output, sum, help;
-
-  keep_concat.push_back(data);
-  keep_concat.push_back(weights_shared);
-  input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
-  result = input.Evaluate(logreg_algorithm);
-  output = result.Unsimdify();
-  for (int t = 0; t < 300; t++)
+  for (int i = 0; i < iterations; i++)
   {
-    sum.push_back(output[t]);
+    keep_concat.clear();
+    keep_concat.push_back(data);
+    keep_concat.push_back(weights_shared);
+    input = encrypto::motion::ShareWrapper::Concatenate(keep_concat);
+    result = input.Evaluate(logreg_algorithm);
+    sum.clear();
+    output = result.Unsimdify();
+    for (int t = 0; t < 300; t++)
+    {
+      sum.push_back(output[t]);
+    }
+    input = mo::ShareWrapper::Concatenate(sum);
+    result = input.Evaluate(weights_algorithm);
+    sum.clear();
+    for (int t = 0; t < 300; t++)
+    {
+      sum.push_back(result);
+    }
+    weights_shared = mo::ShareWrapper::Simdify(sum);
   }
-  input = mo::ShareWrapper::Concatenate(sum);
-  result = input.Evaluate(weights_algorithm);
-  sum.clear();
-  for (int t = 0; t < 300; t++)
-  {
-    sum.push_back(result);
-  }
-  weights_shared = input.Simdify(sum);
 
   party->Run();
   party->Finish();
