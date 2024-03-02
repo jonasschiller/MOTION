@@ -35,7 +35,7 @@ int main(int ac, char *av[])
       return EXIT_SUCCESS;
 
     std::size_t input_size;
-    input_size = user_options["input-size"].as<std::size_t>();
+    input_size = user_options["simd"].as<std::size_t>();
     encrypto::motion::MpcProtocol protocol;
     std::string protocol_string = user_options.at("protocol").as<std::string>();
     if (protocol_string == "boolean_gmw")
@@ -110,7 +110,7 @@ std::pair<program_options::variables_map, bool> ParseProgramOptions(int ac, char
       ("parties", program_options::value<std::vector<std::string>>()->multitoken(), "info (id,IP,port) for each party e.g., --parties 0,127.0.0.1,23000 1,127.0.0.1,23001")
 ("online-after-setup", program_options::value<bool>()->default_value(true), "compute the online phase of the gate evaluations after the setup phase for all of them is completed (true/1 or false/0)")
       ("protocol",program_options::value<std::string>()->default_value("arithmetic_gmw"),"Protocol either arithmetic_gmw,boolean_gmw or boolean_bmr")
-      ("input-size",program_options::value<std::size_t>(),"input-size for the statistics");
+      ("simd",program_options::value<std::size_t>(),"input-size for the statistics");
   // clang-format on
 
   program_options::variables_map user_options;
