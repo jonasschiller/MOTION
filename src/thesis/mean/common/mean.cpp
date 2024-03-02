@@ -71,7 +71,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   const auto division_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
   const auto mean{division.Evaluate(division_algorithm)};
   encrypto::motion::ShareWrapper output;
-  output = result.Out();
+  output = mean.Out();
   party->Run();
   party->Finish();
 
