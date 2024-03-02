@@ -70,7 +70,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   mo::ShareWrapper division = mo::ShareWrapper::Concatenate(shared_input);
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) + "/circuits/fp/division.bristol"};
   const auto division_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
-  const auto mean{input.Evaluate(division_algorithm)};
+  const auto mean{division.Evaluate(division_algorithm)};
 
   mean = mean.Out();
   party->Run();
