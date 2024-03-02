@@ -11,6 +11,3 @@ struct StatisticsContext;
 encrypto::motion::RunTimeStatistics EvaluateProtocol(encrypto::motion::PartyPointer &party,
                                                      std::size_t input_size,
                                                      encrypto::motion::MpcProtocol protocol);
-
-void CreateMeanCircuit(StatisticsContext *context);
-void CreateSumCircuit(StatisticsContext *context);
