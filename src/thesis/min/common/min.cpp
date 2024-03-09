@@ -120,10 +120,10 @@ void CreateMinMaxCircuit(StatisticsContext *context, bool min)
   for (std::size_t i = 0; i < values.size(); i++)
   {
     context->value = context->value.Convert<mo::MpcProtocol::kBooleanGmw>();
-    ge = (mo::SecureUnsignedInteger((values[i].Convert<mo::MpcProtocol::kBooleanGmw>())) >
+    ge = (mo::SecureUnsignedInteger((values[i])) >
           mo::SecureUnsignedInteger(context->value));
-    le = (mo::SecureUnsignedInteger(context->value) > mo::SecureUnsignedInteger(values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
-    eq = (context->value == (values[i].Convert<mo::MpcProtocol::kBooleanGmw>()));
+    le = (mo::SecureUnsignedInteger(context->value) > mo::SecureUnsignedInteger(values[i]));
+    eq = (context->value == (values[i]));
     // Transform into arithmetic uint 32 mask
     ge = prepare_keep(ge, context->full_zero);
     le = prepare_keep(le, context->full_zero);
@@ -132,12 +132,12 @@ void CreateMinMaxCircuit(StatisticsContext *context, bool min)
     if (min == false)
     {
       context->value = le * context->value.Convert<mo::MpcProtocol::kArithmeticGmw>() +
-                       ge * values[i].Get() + eq * values[i].Get();
+                       ge * values[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get() + eq * values[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get();
     }
     else
     {
       context->value = ge * context->value.Convert<mo::MpcProtocol::kArithmeticGmw>() +
-                       le * values[i].Get() + eq * values[i].Get();
+                       le * values[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get() + eq * values[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get();
     }
   }
 }
