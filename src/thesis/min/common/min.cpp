@@ -76,7 +76,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   StatisticsContext context{shared_input, size, value, full_zero};
   // Create the circuit
   CreateMinMaxCircuit(&context, true);
-  min_value = context.value.Out();
+  auto min_value = context.value.Out();
   party->Run();
   std::cout << "Max " << min_value.As<std::uint32_t>() << std::endl;
   party->Finish();
