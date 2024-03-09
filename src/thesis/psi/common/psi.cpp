@@ -22,7 +22,28 @@
 #include "utility/config.h"
 
 namespace mo = encrypto::motion;
+// Abbreviate Namespace
+namespace mo = encrypto::motion;
+encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPointer &party,
+                                                    std::size_t number_of_wires,
+                                                    std::size_t number_of_simd)
+{
+  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
+  const encrypto::motion::BitVector<> dummy_input(number_of_simd);
 
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  for (auto &w : wires)
+  {
+    w = register_pointer->EmplaceWire<encrypto::motion::proto::boolean_gmw::Wire>(dummy_input,
+                                                                                  *backend);
+    w->SetOnlineFinished();
+  }
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::boolean_gmw::Share>(wires));
+}
 /**
  * Stores all the inputs needed for StatisticCircuit().
  */
@@ -49,11 +70,9 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
 
   auto party_id = party->GetConfiguration()->GetMyId();
 
-  std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
-
   mo::ShareWrapper input_0, input_1;
-  input_0 = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(party_0), 0);
-  input_1 = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(party_1), 0);
+  input_0 = DummyBooleanGmw(party, 32, input_size);
+  input_1 = DummyBooleanGmw(party, 32, input_size);
 
   mo::ShareWrapper full_zero =
       party->In<mo::MpcProtocol::kBooleanGmw>(mo::BitVector<>(1, false), 0);
