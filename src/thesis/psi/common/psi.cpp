@@ -71,8 +71,8 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   auto party_id = party->GetConfiguration()->GetMyId();
 
   mo::ShareWrapper input_0, input_1;
-  input_0 = DummyBooleanGmw(party, 32, input_size);
-  input_1 = DummyBooleanGmw(party, 32, input_size);
+  input_0 = DummyBooleanGmwShare(party, 32, input_size);
+  input_1 = DummyBooleanGmwShare(party, 32, input_size);
 
   mo::ShareWrapper full_zero =
       party->In<mo::MpcProtocol::kBooleanGmw>(mo::BitVector<>(1, false), 0);
