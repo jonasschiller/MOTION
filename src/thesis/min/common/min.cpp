@@ -21,7 +21,24 @@
 
 // Abbreviate Namespace
 namespace mo = encrypto::motion;
+encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPointer& party,
+                                                    std::size_t number_of_wires,
+                                                    std::size_t number_of_simd) {
+  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
+  const encrypto::motion::BitVector<> dummy_input(number_of_simd);
 
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  for (auto& w : wires) {
+    w = register_pointer->EmplaceWire<encrypto::motion::proto::boolean_gmw::Wire>(dummy_input,
+                                                                                  *backend);
+    w->SetOnlineFinished();
+  }
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::boolean_gmw::Share>(wires));
+}
 /**
  * Stores all the inputs needed for StatisticCircuit().
  */
@@ -48,11 +65,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   std::vector<std::uint32_t> input(input_size, 0);
   std::vector<mo::ShareWrapper> shared_input;
   // insert the Input
-  for (std::size_t i = 0; i < input.size(); i++)
-  {
-    shared_input.push_back(
-        party->In<mo::MpcProtocol::kArithmeticGmw>(input[i], 0));
-  }
+  shared_input=DummyBooleanGmw(party, 32, 10000);
   // Create the context for the circuit
   uint32_t zero = 0;
   mo::ShareWrapper sum = party->In<mo::MpcProtocol::kArithmeticGmw>(zero, 1);
@@ -97,7 +110,7 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
 
 void CreateMinMaxCircuit(StatisticsContext *context, bool min)
 {
-  auto values = context->shared_input;
+  auto values = context->shared_input.Unsimdify();
 
   mo::ShareWrapper ge, le, eq;
 
