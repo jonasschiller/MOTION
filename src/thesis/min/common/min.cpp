@@ -47,8 +47,6 @@ encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPoint
 struct StatisticsContext
 {
   mo::ShareWrapper shared_input;
-  mo::ShareWrapper sum;
-  mo::SecureUnsignedInteger mean;
   mo::ShareWrapper input_size;
   mo::ShareWrapper value;
   mo::ShareWrapper full_zero;
@@ -64,28 +62,19 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   // Get respective party id
   auto party_id = party->GetConfiguration()->GetMyId();
   // Load the dummy input
-  std::vector<std::uint32_t> input(input_size, 0);
   mo::ShareWrapper shared_input;
   // insert the Input
   shared_input = DummyBooleanGmwShare(party, 32, 10000);
   // Create the context for the circuit
   uint32_t zero = 0;
-  mo::ShareWrapper sum = party->In<mo::MpcProtocol::kArithmeticGmw>(zero, 1);
-  mo::SecureUnsignedInteger mean = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(zero), 1);
   mo::ShareWrapper size = party->In<mo::MpcProtocol::kBooleanGmw>(
       mo::ToInput(input_size), 1);
   mo::ShareWrapper value = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(zero), 1);
-  mo::SecureUnsignedInteger max_value =
-      party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(zero), 1);
-  mo::SecureUnsignedInteger min_value =
-      party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(zero), 1);
   mo::ShareWrapper full_zero =
       party->In<mo::MpcProtocol::kBooleanGmw>(mo::BitVector<>(1, false), 0);
 
-  StatisticsContext context{shared_input, sum, mean, size, value, full_zero};
+  StatisticsContext context{shared_input, size, value, full_zero};
   // Create the circuit
-
-  // CreateMeanCircuit(&context);
   CreateMinMaxCircuit(&context, true);
   min_value = context.value.Out();
   party->Run();
@@ -119,7 +108,6 @@ void CreateMinMaxCircuit(StatisticsContext *context, bool min)
   context->value = values[0];
   for (std::size_t i = 0; i < values.size(); i++)
   {
-    context->value = context->value.Convert<mo::MpcProtocol::kBooleanGmw>();
     ge = (mo::SecureUnsignedInteger((values[i])) >
           mo::SecureUnsignedInteger(context->value));
     le = (mo::SecureUnsignedInteger(context->value) > mo::SecureUnsignedInteger(values[i]));
@@ -139,5 +127,6 @@ void CreateMinMaxCircuit(StatisticsContext *context, bool min)
       context->value = ge * context->value.Convert<mo::MpcProtocol::kArithmeticGmw>() +
                        le * values[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get() + eq * values[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get();
     }
+    context->value = context->value.Convert<mo::MpcProtocol::kBooleanGmw>();
   }
 }
