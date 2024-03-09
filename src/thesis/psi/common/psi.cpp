@@ -28,7 +28,7 @@ namespace mo = encrypto::motion;
  */
 struct PsiContext
 {
-  std::vector<mo::ShareWrapper> input_1, input_2;
+  mo::ShareWrapper input_1, input_2;
   mo::ShareWrapper full_zero;
   mo::SecureUnsignedInteger zero;
   mo::size_t input_size;
@@ -50,7 +50,6 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   auto party_id = party->GetConfiguration()->GetMyId();
 
   std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
-  std::vector<mo::ShareWrapper> input_0, input_1;
 
   std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
   mo::ShareWrapper input_0, input_1;
