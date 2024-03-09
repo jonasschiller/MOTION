@@ -21,7 +21,24 @@
 
 // Abbreviate Namespace
 namespace mo = encrypto::motion;
+template <typename T>
+encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer &party,
+                                                       std::size_t bit_size,
+                                                       std::size_t number_of_simd)
+{
+  std::vector<encrypto::motion::WirePointer> wires(1);
+  const std::vector<T> dummy_input(number_of_simd, 0);
 
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  wires[0] = register_pointer->EmplaceWire<encrypto::motion::proto::arithmetic_gmw::Wire<T>>(
+      dummy_input, *backend);
+  wires[0]->SetOnlineFinished();
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
+}
 /**
  * Stores all the inputs needed for StatisticCircuit().
  */
@@ -44,22 +61,19 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   // Get respective party id
   auto party_id = party->GetConfiguration()->GetMyId();
   // Load the dummy input
-  std::vector<std::uint32_t> input(input_size, 0);
-  std::vector<mo::ShareWrapper> shared_input;
+  mo::ShareWrapper shared_input;
   // insert the Input
-  for (std::size_t i = 0; i < input.size(); i++)
-  {
-    shared_input.push_back(
-        party->In<mo::MpcProtocol::kArithmeticGmw>(input[i], 0));
-  }
+
+  shared_input = DummyArithmeticGmwShare<std::uint32_t>(party, 32, 10000);
   // Create the context for the circuit
   uint32_t zero = 0;
   mo::ShareWrapper sum = party->In<mo::MpcProtocol::kArithmeticGmw>(zero, 1);
   mo::ShareWrapper size = party->In<mo::MpcProtocol::kBooleanGmw>(
       mo::ToInput(input_size), 1);
+  auto input_un = shared_input.Unsimdify();
   for (std::size_t i = 0; i < shared_input.size(); i++)
   {
-    sum += shared_input[i].Get();
+    sum += input_un[i].Get();
   }
   // Create the circuit
   sum = sum.Convert<mo::MpcProtocol::kBooleanGmw>();
