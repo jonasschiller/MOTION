@@ -65,7 +65,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   auto party_id = party->GetConfiguration()->GetMyId();
   // Load the dummy input
   std::vector<std::uint32_t> input(input_size, 0);
-  std::vector<mo::ShareWrapper> shared_input;
+  mo::ShareWrapper shared_input;
   // insert the Input
   shared_input = DummyBooleanGmwShare(party, 32, 10000);
   // Create the context for the circuit
