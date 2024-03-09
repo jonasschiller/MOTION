@@ -31,7 +31,7 @@ struct PsiContext
   mo::ShareWrapper input_1, input_2;
   mo::ShareWrapper full_zero;
   mo::SecureUnsignedInteger zero;
-  mo::size_t input_size;
+  std::size_t input_size;
   std::vector<mo::SecureUnsignedInteger> results;
 };
 
@@ -51,7 +51,6 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
 
   std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
 
-  std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
   mo::ShareWrapper input_0, input_1;
   input_0 = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(party_0), 0);
   input_1 = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(party_1), 0);
