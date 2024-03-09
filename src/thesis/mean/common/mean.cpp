@@ -71,15 +71,15 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   mo::ShareWrapper size = party->In<mo::MpcProtocol::kBooleanGmw>(
       mo::ToInput(input_size), 1);
   auto input_un = shared_input.Unsimdify();
-  for (std::size_t i = 0; i < shared_input.size(); i++)
+  for (std::size_t i = 0; i < input_un.size(); i++)
   {
     sum += input_un[i].Get();
   }
   // Create the circuit
   sum = sum.Convert<mo::MpcProtocol::kBooleanGmw>();
-  shared_input.clear();
-  shared_input.push_back(sum);
-  shared_input.push_back(size);
+  input_un.clear();
+  input_un.push_back(sum);
+  input_un.push_back(size);
   mo::ShareWrapper division = mo::ShareWrapper::Concatenate(shared_input);
   const auto kPathToAlgorithm{std::string(encrypto::motion::kRootDir) + "/circuits/fp/division.bristol"};
   const auto division_algorithm{encrypto::motion::AlgorithmDescription::FromBristol(kPathToAlgorithm)};
