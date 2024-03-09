@@ -31,6 +31,7 @@ struct PsiContext
   std::vector<mo::ShareWrapper> input_1, input_2;
   mo::ShareWrapper full_zero;
   mo::SecureUnsignedInteger zero;
+  mo::size_t input_size;
   std::vector<mo::SecureUnsignedInteger> results;
 };
 
@@ -51,34 +52,21 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
   std::vector<mo::ShareWrapper> input_0, input_1;
 
-  for (std::size_t i = 0; i < party_0.size(); i++)
-  {
-    input_0.push_back(
-        party->In<mo::MpcProtocol::kArithmeticGmw>(party_0[i], 0));
-    input_1.push_back(
-        party->In<mo::MpcProtocol::kArithmeticGmw>(party_1[i], 0));
-  }
+  std::vector<std::uint32_t> party_0(input_size, 1), party_1(input_size, 1);
+  mo::ShareWrapper input_0, input_1;
+  input_0 = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(party_0), 0);
+  input_1 = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(party_1), 0);
 
   mo::ShareWrapper full_zero =
       party->In<mo::MpcProtocol::kBooleanGmw>(mo::BitVector<>(1, false), 0);
   mo::SecureUnsignedInteger zero = party->In<mo::MpcProtocol::kBooleanGmw>(mo::ToInput(zero_help), 0);
 
-  PsiContext context{input_0, input_1, full_zero, zero, results};
+  PsiContext context{input_0, input_1, full_zero, zero, input_size, results};
   CreatePsiCircuit(&context);
   // Constructs an output gate for each bin.
-  for (std::size_t i = 0; i < context.results.size(); i++)
-    context.results[i] = context.results[i].Out();
+  context.results[0] = context.results[0].Out();
   party->Run();
-  // Converts the outputs to integers.
-  std::vector<std::uint32_t> result;
-  for (auto each_output : context.results)
-    result.push_back(each_output.As<std::uint32_t>());
-
-  for (std::size_t i = 0; i < input_size; i++)
-  {
-    std::cout << " " << result[i] << "," << std::endl;
-  }
-
+  // Converts the outputs to integers.;
   party->Finish();
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
   return statistics.front();
@@ -105,17 +93,17 @@ void CreatePsiCircuit(PsiContext *context)
 {
   mo::ShareWrapper id_match;
   mo::ShareWrapper keep;
-  for (std::size_t i = 0; i < context->input_1.size(); i++)
+  auto input_1 = context->input_1.Unsimdify();
+  for (std::size_t i = 0; i < context->input_size; i++)
   {
     keep = (context->zero > context->zero);
-    for (std::size_t j = 0; j < context->input_2.size(); j++)
+    id_match = mo::SecureUnsignedInteger(input_1[i]) == mo::SecureUnsignedInteger(context->input_2);
+    auto match = id_match.Unsimdify();
+    for (std::size_t j = 0; j < match.size(); j++)
     {
-      id_match =
-          (mo::SecureUnsignedInteger(context->input_1[i].Convert<mo::MpcProtocol::kBooleanGmw>()) ==
-           mo::SecureUnsignedInteger(context->input_2[j].Convert<mo::MpcProtocol::kBooleanGmw>()));
-      keep = (keep | id_match);
+      keep = (keep | match[j]);
     }
     keep = prepare_keep(keep, context->full_zero);
-    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1[i].Get());
+    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1.Unsimdify()[i].Get());
   }
 }
