@@ -78,7 +78,6 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   CreateMinMaxCircuit(&context, true);
   auto min_value = context.value.Out();
   party->Run();
-  std::cout << "Max " << min_value.As<std::uint32_t>() << std::endl;
   party->Finish();
 
   const auto &statistics = party->GetBackend()->GetRunTimeStatistics();
