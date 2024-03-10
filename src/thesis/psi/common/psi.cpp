@@ -108,19 +108,21 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
  * */
 void CreatePsiCircuit(PsiContext *context)
 {
+  auto input_1 = context->input_1.Unsimdify();
+  auto input_2 = context->input_2.Unsimdify();
   mo::ShareWrapper id_match;
   mo::ShareWrapper keep;
-  auto input_1 = context->input_1.Unsimdify();
-  for (std::size_t i = 0; i < context->input_size; i++)
+  for (std::size_t i = 0; i < input_1.size(); i++)
   {
     keep = (context->zero > context->zero);
-    id_match = mo::SecureUnsignedInteger(input_1[i].Get()) == mo::SecureUnsignedInteger(context->input_2);
-    auto match = id_match.Unsimdify();
-    for (std::size_t j = 0; j < match.size(); j++)
+    for (std::size_t j = 0; j < input_2.size(); j++)
     {
-      keep = (keep | match[j]);
+      id_match =
+          (mo::SecureUnsignedInteger(input_1[i]) ==
+           mo::SecureUnsignedInteger(input_2[j]));
+      keep = (keep | id_match);
     }
     keep = prepare_keep(keep, context->full_zero);
-    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1[i].Get());
+    context->results[i] = mo::SecureUnsignedInteger(keep * input_1[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get());
   }
 }
