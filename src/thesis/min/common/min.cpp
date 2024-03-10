@@ -64,7 +64,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   // Load the dummy input
   mo::ShareWrapper shared_input;
   // insert the Input
-  shared_input = DummyBooleanGmwShare(party, 32, 10000);
+  shared_input = DummyBooleanGmwShare(party, 32, input_size);
   // Create the context for the circuit
   uint32_t zero = 0;
   mo::ShareWrapper size = party->In<mo::MpcProtocol::kBooleanGmw>(

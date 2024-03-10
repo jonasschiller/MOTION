@@ -114,13 +114,13 @@ void CreatePsiCircuit(PsiContext *context)
   for (std::size_t i = 0; i < context->input_size; i++)
   {
     keep = (context->zero > context->zero);
-    id_match = mo::SecureUnsignedInteger(input_1[i]) == mo::SecureUnsignedInteger(context->input_2);
+    id_match = mo::SecureUnsignedInteger(input_1[i].Get()) == mo::SecureUnsignedInteger(context->input_2);
     auto match = id_match.Unsimdify();
     for (std::size_t j = 0; j < match.size(); j++)
     {
       keep = (keep | match[j]);
     }
     keep = prepare_keep(keep, context->full_zero);
-    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1.Unsimdify()[i].Get());
+    context->results[i] = mo::SecureUnsignedInteger(keep * context->input_1[i].Get());
   }
 }
