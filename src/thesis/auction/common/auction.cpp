@@ -39,7 +39,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
 {
   std::int32_t zero_help = 0;
   std::int32_t one_help = 1;
-  std::int32_t price_range = 10;
+  std::int32_t price_range = 100;
 
   mo::ShareWrapper clearing_price;
   clearing_price = party->In<mo::MpcProtocol::kArithmeticGmw>(zero_help, 0);
