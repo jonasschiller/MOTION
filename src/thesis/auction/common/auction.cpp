@@ -23,13 +23,52 @@
 #include "utility/config.h"
 
 namespace mo = encrypto::motion;
+encrypto::motion::ShareWrapper DummyBooleanGmwShare(encrypto::motion::PartyPointer &party,
+                                                    std::size_t number_of_wires,
+                                                    std::size_t number_of_simd)
+{
+  std::vector<encrypto::motion::WirePointer> wires(number_of_wires);
+  const encrypto::motion::BitVector<> dummy_input(number_of_simd);
 
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  for (auto &w : wires)
+  {
+    w = register_pointer->EmplaceWire<encrypto::motion::proto::boolean_gmw::Wire>(dummy_input,
+                                                                                  *backend);
+    w->SetOnlineFinished();
+  }
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::boolean_gmw::Share>(wires));
+}
+
+template <typename T>
+encrypto::motion::ShareWrapper DummyArithmeticGmwShare(encrypto::motion::PartyPointer &party,
+                                                       std::size_t bit_size,
+                                                       std::size_t number_of_simd)
+{
+  std::vector<encrypto::motion::WirePointer> wires(1);
+  const std::vector<T> dummy_input(number_of_simd, 0);
+
+  encrypto::motion::BackendPointer backend{party->GetBackend()};
+  encrypto::motion::RegisterPointer register_pointer{backend->GetRegister()};
+
+  wires[0] = register_pointer->EmplaceWire<encrypto::motion::proto::arithmetic_gmw::Wire<T>>(
+      dummy_input, *backend);
+  wires[0]->SetOnlineFinished();
+
+  return encrypto::motion::ShareWrapper(
+      std::make_shared<encrypto::motion::proto::arithmetic_gmw::Share<T>>(wires));
+}
 /**
  * Stores all the inputs needed for StatisticCircuit().
  */
 struct AuctionContext
 {
-  std::vector<mo::ShareWrapper> bids_price, bids_quantity, offers_price, offers_quantity, indices;
+  mo::ShareWrapper bids_price, bids_quantity, offers_price, offers_quantity;
+  std::vector<mo::ShareWrapper> indices;
   mo::ShareWrapper full_zero, zero, clearing_price;
   std::int32_t price_range;
 };
@@ -39,7 +78,7 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
 {
   std::int32_t zero_help = 0;
   std::int32_t one_help = 1;
-  std::int32_t price_range = 100;
+  std::int32_t price_range = 10;
 
   mo::ShareWrapper clearing_price;
   clearing_price = party->In<mo::MpcProtocol::kArithmeticGmw>(zero_help, 0);
@@ -47,18 +86,14 @@ mo::RunTimeStatistics EvaluateProtocol(mo::PartyPointer &party, std::size_t inpu
   auto party_id = party->GetConfiguration()->GetMyId();
 
   std::vector<std::int32_t> help(input_size, 5);
-  std::vector<mo::ShareWrapper> bids_price, bids_quantity, offers_price, offers_quantity;
+  mo::ShareWrapper bids_price, bids_quantity, offers_price, offers_quantity, full_zero;
 
-  for (std::size_t i = 0; i < input_size; i++)
-  {
-    bids_price.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
-    bids_quantity.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
-    offers_price.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
-    offers_quantity.push_back(party->In<mo::MpcProtocol::kArithmeticGmw>(help[i], 0));
-  }
+  bids_price = DummyBooleanGmwShare(party, 32, input_size);
+  bids_quantity = DummyArithmeticGmwShare<std::uint32_t>(party, 32, input_size);
+  offers_price = DummyBooleanGmwShare(party, 32, input_size);
+  offers_quantity = DummyArithmeticGmwShare<std::uint32_t>(party, 32, input_size);
+  full_zero = DummyBooleanGmwShare(party, 1, input_size);
 
-  mo::ShareWrapper full_zero =
-      party->In<mo::MpcProtocol::kBooleanGmw>(mo::BitVector<>(1, false), 0);
   mo::ShareWrapper zero = party->In<mo::MpcProtocol::kArithmeticGmw>(zero_help, 0);
   std::vector<mo::ShareWrapper> indices;
   for (int i = 0; i < price_range; i++)
@@ -102,43 +137,58 @@ void CreateAuctionCircuit(AuctionContext *context)
   mo::ShareWrapper comp;
   mo::ShareWrapper keep;
   mo::ShareWrapper offer_sum, bids_sum, diff, min_diff, le, ge, eq;
-
+  mo::ShareWrapper offer_price, bids_price, offer_quantity, bids_quantity;
+  offer_price = context->offers_price;
+  bids_price = context->bids_price;
+  offer_quantity = context->offers_quantity;
+  bids_quantity = context->bids_quantity;
+  std::vector<mo::ShareWrapper> ind_vec;
   for (std::size_t i = 0; i < context->price_range; i++)
   {
-    for (std::size_t t = 0; t < context->offers_price.size(); t++)
+    for (std::size_t t = 0; t < context->indices.size(); t++)
     {
-      comp =
-          (mo::SecureUnsignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureUnsignedInteger(context->indices[i]));
-      eq =
-          (mo::SecureUnsignedInteger(context->offers_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) ==
-           mo::SecureUnsignedInteger(context->indices[i]));
-      keep = prepare_keep(comp | eq, context->full_zero);
-      if (t == 0)
-      {
-        offer_sum = keep * context->offers_quantity[t].Get();
-      }
-      else
-      {
-        offer_sum = offer_sum + keep * context->offers_quantity[t].Get();
-      }
-      comp =
-          (mo::SecureUnsignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureUnsignedInteger(context->indices[i]));
-      eq =
-          (mo::SecureUnsignedInteger(context->bids_price[t].Convert<mo::MpcProtocol::kBooleanGmw>()) >
-           mo::SecureUnsignedInteger(context->indices[i]));
-      keep = prepare_keep(comp | eq, context->full_zero);
+      ind_vec.push_back(context->indices[t]);
+    }
 
+    comp =
+        (mo::SecureUnsignedInteger(offer_price)) >
+        (mo::SecureUnsignedInteger(mo::ShareWrapper::Simdify(ind_vec)));
+
+    eq = (mo::SecureUnsignedInteger(offer_price) == mo::SecureUnsignedInteger(mo::ShareWrapper::Simdify(ind_vec)));
+
+    keep = prepare_keep(comp | eq, context->full_zero);
+    auto val = (keep * offer_quantity).Unsimdify();
+    for (std::size_t t = 0; t < offer_price.Unsimdify().size(); t++)
+    {
       if (t == 0)
       {
-        bids_sum = keep * context->bids_quantity[t].Get();
+        offer_sum = val[t].Get();
       }
       else
       {
-        bids_sum = bids_sum + keep * context->bids_quantity[t].Get();
+        offer_sum = offer_sum + val[t].Get();
       }
     }
+    comp =
+        (mo::SecureUnsignedInteger(bids_price) >
+         mo::SecureUnsignedInteger(mo::ShareWrapper::Simdify(ind_vec)));
+    eq =
+        (mo::SecureUnsignedInteger(bids_price) >
+         mo::SecureUnsignedInteger(mo::ShareWrapper::Simdify(ind_vec)));
+    keep = prepare_keep(comp | eq, context->full_zero);
+    auto val2 = (keep * bids_quantity).Unsimdify();
+    for (std::size_t t = 0; t < bids_price.Unsimdify().size(); t++)
+    {
+      if (t == 0)
+      {
+        bids_sum = val2[t].Get();
+      }
+      else
+      {
+        bids_sum = bids_sum + val2[t].Get();
+      }
+    }
+
     diff = bids_sum - offer_sum;
     if (i == 0)
     {
@@ -154,5 +204,6 @@ void CreateAuctionCircuit(AuctionContext *context)
     eq = prepare_keep(eq, context->full_zero);
     context->clearing_price = ge * context->clearing_price + le * context->indices[i].Convert<mo::MpcProtocol::kArithmeticGmw>() + eq * context->clearing_price;
     min_diff = ge * min_diff + le * diff + eq * diff;
+    ind_vec.clear();
   }
 }

@@ -106,23 +106,32 @@ mo::ShareWrapper prepare_keep(mo::ShareWrapper keep, mo::ShareWrapper full_zero)
 /**
  * Constructs the cross tabs of the given data in CrossTabsContext.
  * */
+
 void CreatePsiCircuit(PsiContext *context)
 {
   auto input_1 = context->input_1.Unsimdify();
-  auto input_2 = context->input_2.Unsimdify();
+  auto input_2 = context->input_2;
+  std::vector<mo::ShareWrapper> input_1_vec;
   mo::ShareWrapper id_match;
   mo::ShareWrapper keep;
   for (std::size_t i = 0; i < input_1.size(); i++)
   {
-    keep = (context->zero > context->zero);
-    for (std::size_t j = 0; j < input_2.size(); j++)
+    for (std::size_t t = 0; t < input_1.size(); t++)
     {
-      id_match =
-          (mo::SecureUnsignedInteger(input_1[i]) ==
-           mo::SecureUnsignedInteger(input_2[j]));
-      keep = (keep | id_match);
+      input_1_vec.push_back(input_1[t]);
+    }
+    auto input_1_sim = mo::ShareWrapper::Simdify(input_1_vec);
+    keep = (context->zero > context->zero);
+    id_match =
+        (mo::SecureUnsignedInteger(input_1_sim) ==
+         mo::SecureUnsignedInteger(input_2));
+    auto id_match_un = id_match.Unsimdify();
+    for (std::size_t j = 0; j < input_1.size(); j++)
+    {
+      keep = (keep | id_match_un[j]);
     }
     keep = prepare_keep(keep, context->full_zero);
     context->results[i] = mo::SecureUnsignedInteger(keep * input_1[i].Convert<mo::MpcProtocol::kArithmeticGmw>().Get());
+    input_1_vec.clear();
   }
 }
